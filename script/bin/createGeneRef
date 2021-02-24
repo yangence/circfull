@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+if [[ $# -ne 3 ]] ; then
+    echo "Usage:"
+    echo "$0 gene.gtf ref_genome.fa ref_gene.fa"
+    exit
+fi
+gene_gtf=/media/data4/lzl/annotation/GENCODE/humanV38/gencode.v32.annotation.gtf
+ref_genome=/media/data4/lzl/genome/hg38_noPatches/hg38.fa
+ref_gene=/media/data4/lzl/tmp/ref_gene.fa
+
+gene_gtf=$1
+ref_genome=$2
+ref_gene=$3
+tmp_gene=${gene_gtf}.circfull
+
+perl -alne 'if($F[2] eq "gene"){print $_}' $gene_gtf |sort -k 1,1V -k 4,4n | perl -F/\\t/  -alne 'if($F[2] eq "gene"){@d=split("; ",$F[8]);$gene="$d[0]|$d[2]|$d[4]";print "$F[0]\t$F[1]\t$gene\t$F[3]\t$F[4]\t$F[5]\t$F[6]\t$F[7]\t$F[2]"}' - >$tmp_gene
+bedtools getfasta -fi $ref_genome -bed $tmp_gene  -fo $ref_gene -fullHeader -name+
+sed -i  's/ /,/g' $ref_gene
+rm $tmp_gene

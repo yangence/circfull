@@ -207,7 +207,7 @@ def adjFL(options):
     gtf_exon=gtf_exon.set_index('gene')
     gtf_exon=gtf_exon.sort_index()
     if isSecond:
-        path=outPrefix+'../'
+        path=outPrefix+'../RG/'
     else:
         path=outPrefix
     if os.path.exists(os.path.dirname(gtfFile)+'/ExonSdict_fsj.npy'):

@@ -13,7 +13,7 @@ circfull is a free software, which can be downloaded from https://github.com/yan
 2) porechop(0.2.4) can be downloaded from https://github.com/rrwick/Porechop.
 We recommand replace adapters.py in porechop directory with circfull/scripts/bin/adapter.py which contain circFL-seq primers
 3) TideHunter (1.0) and trf (4.09) are included in this program.
-4) Python 3.x.x and corresponding versions of pysam, numpy, pyfasta, pandas, python-intervals, pyfasta, sklearn, interval, mappy, progressbar, docopt.
+4) Python 3.x.x and corresponding versions of pysam, numpy, pandas, python-intervals, pyfasta, sklearn, interval, mappy, progressbar, docopt.
 
 
 ## Installation
@@ -319,7 +319,7 @@ Options:
 |  14  | type                 | annotation for isoform |
 
 ## Examples
-Details in [examples](https://github.com/yangence/circfull/example).
+Details in [examples](https://github.com/yangence/circfull/tree/main/example).
 ## Copyright and License Information
 
 Copyright (C) 2021 Zelin Liu (zlliu@bjmu.edu.cn). See the [LICENSE](https://github.com/yangence/circfull/blob/master/LICENSE) file for license rights and limitations.

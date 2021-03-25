@@ -282,7 +282,7 @@ def filterBS(options):
             np.save(outPrefix+'strandDict.npy',strandDict)
         else:
                 if isSecond:
-                    path=outPrefix+'../'
+                    path=outPrefix+'../RG/'
                 else:
                     path=outPrefix
                 

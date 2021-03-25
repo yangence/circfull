@@ -458,8 +458,8 @@ def bed2df(bedFile,gtfFile):
             n='N5SS,N3SS'
             m='NSS'
         elif i=='Intron retention':
-            n='cryptic exon'
-            m='cryptic exon'
+            n='intronic'
+            m='intronic'
         elif i=='antisense':
             n='antisense'
             m='antisense'
@@ -467,8 +467,8 @@ def bed2df(bedFile,gtfFile):
             n='intergenic'
             m='intergenic'
         elif i=='m':
-            n='full match'
-            m='full match'
+            n='exonic'
+            m='exonic'
         elif i=='novel UTR3':
             n='novel UTR3'
             m='novel UTR'

@@ -57,7 +57,8 @@ def predictStrand(outPrefix,fastqFile):
     primerScore_sub=primerScore_sub.dropna()
 
     X_train,X_test,Y_train,Y_test=train_test_split(primerScore_sub.loc[:,primerScore_sub.columns!='value'],primerScore_sub['value'],stratify=primerScore_sub['value'],random_state=66)
-
+    print("Train sample size: %d\n" % X_train.shape[0])
+    print("Test sample size: %d\n" % X_test.shape[0])
     training_accuracy = []
     test_accuracy = []
     rf=RandomForestClassifier(random_state=0,n_estimators=200,min_samples_leaf=1, min_samples_split=10)

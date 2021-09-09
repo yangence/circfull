@@ -25,8 +25,8 @@ def fus2toNormal(x):
     end=x['end_second']
     tmpLen=x['len_first']+x['len_second']
     exonNum=x['exonNum_first']+x['exonNum_second']
-    exons_start=x['exon_start_first']+','+x['exon_start_second']
-    exons_end=x['exon_end_first']+','+x['exon_end_second']
+    exons_start=str(x['exon_start_first'])+','+str(x['exon_start_second'])
+    exons_end=str(x['exon_end_first'])+','+str(x['exon_end_second'])
     motif=x['exon_leftSeq_first'][0:2]+x['exon_rightSeq_second'][-2:]
     leftSeq=x['exon_leftSeq_first'][0:2]
     rightSeq=x['exon_rightSeq_second'][-2:]

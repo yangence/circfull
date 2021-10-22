@@ -320,6 +320,10 @@ Options:
 
 ## Examples
 Details in [examples](https://github.com/yangence/circfull/tree/main/example).
+
+## Reference
+[Liu Z, Tao C, Li S, Du M, Bai Y, Hu X, Li Y, Chen J, Yang E. circFL-seq reveals full-length circular RNAs with rolling circular reverse transcription and nanopore sequencing. eLife. 2021. 10:e69457. doi: 10.7554/eLife.69457](https://elifesciences.org/articles/69457)
+
 ## Copyright and License Information
 
 Copyright (C) 2021 Zelin Liu (zlliu@bjmu.edu.cn). See the [LICENSE](https://github.com/yangence/circfull/blob/master/LICENSE) file for license rights and limitations.

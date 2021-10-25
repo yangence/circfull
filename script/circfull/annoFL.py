@@ -263,6 +263,8 @@ def getMinMax(canGene_part):
 def bed2df(bedFile,gtfFile):
     global tabixfile,gene2strand_dict,gene2trans_dict,gene2exon_dict,trans2exon_dict,trans2gene_dict,gene2status_dict,gene2class_dict,trans2class_dict
     FL_bed=pd.read_csv(bedFile,sep='\t',header=None)
+    FL_bed.iloc[:,10]=FL_bed.iloc[:,10].map(str)
+    FL_bed.iloc[:,11]=FL_bed.iloc[:,11].map(str)
     FL=pd.DataFrame(FL_bed.apply(lambda x: bed2FL(x),axis=1).tolist(),columns=['chr','start','end','isoID','strand','exon_start','exon_end','len'])
     tabixfile=pysam.TabixFile(gtfFile)
     gene2strand_dict={}

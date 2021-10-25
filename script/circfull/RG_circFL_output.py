@@ -13,7 +13,7 @@ def FL2bed(FL_noDup):
     exonSize=FL_noDup.apply(lambda x: getSize(x),axis=1).tolist()
     FL_bed['blockSizes']=exonSize
     startPos=FL_noDup.apply(lambda x: getStart(x),axis=1).tolist()
-    FL_bed['blockStarts ']=startPos
+    FL_bed['blockStarts']=startPos
     FL_bed.loc[FL_bed['strand']=='U','strand']=''
     return(FL_bed)
     

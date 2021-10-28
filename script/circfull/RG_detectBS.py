@@ -143,8 +143,8 @@ def detectBS(options):
     for i in range(FLdf.shape[0]):
         each=FLdf.iloc[i]
         chr=each['chr']
-        exonS=[int(j) for j in each['exon_start'].split(',')]
-        exonE=[int(j) for j in each['exon_end'].split(',')]
+        exonS=[int(j) for j in str(each['exon_start']).split(',')]
+        exonE=[int(j) for j in str(each['exon_end']).split(',')]
         maxFa=genome.sequence({'chr': chr, 'start':exonS[0]+1-hangLen, 'stop':exonE[-1]+hangLen})
         faBS=''
         for j in range(2):

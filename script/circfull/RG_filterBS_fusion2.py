@@ -183,7 +183,8 @@ def filterBS_fusion2(genomeFile,gtfFile,outPrefix):
     BS_Fusion2=pd.read_csv(BSFile,names=['ID','leftSchr','leftEchr','leftSpos','leftEpos','leftSseq','leftEseq',
     'rightSchr','rightEchr','rightSpos','rightEpos','rightSseq','rightEseq','strand'],sep='\t',dtype=object)
     BS_Fusion2=BS_Fusion2.dropna(axis = 0)
-
+    if BS_Fusion2.shape[0]<1:
+        return(False)
     ExonSdict={}
     ExonEdict={}
 
@@ -245,3 +246,4 @@ def filterBS_fusion2(genomeFile,gtfFile,outPrefix):
             rightListS.append(tmp['leftEseq'])
     BS_Fusion2_adj_2=pd.DataFrame({'ID':list(BS_Fusion2_adj['ID'].values),'chr':list(BS_Fusion2_adj['rightChr'].values),'start':leftList,'end':rightList,'leftSeq':leftListS,'rightSeq':rightListS})
     BS_Fusion2_adj_2.to_csv(outPrefix+'BS_Fusion2_adj_2.txt',sep='\t',index=None,header=None)
+    return(True)

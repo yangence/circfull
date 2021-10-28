@@ -86,17 +86,24 @@ def mRG(options):
     if not sRG_N:
         plog('Warning: make sure file of circFL_Normal.txt in %s or %ssRG/' % (sRG,sRG))
     if (not cRG_N) and (not sRG_N):
-        sys.exit('ERROR: at least one of cRG and sRG directory contain circFL_Normal.txt')
-    if cRG_N and (not sRG_N):
-        plog('Merge results from RG and cRG: merge')
-        merge(RG=RG,cRG=cRG,outDir=outPrefix+'mRG/')
-    elif sRG_N and (not cRG_N):
-        plog('Merge results from RG and sRG: merge')
-        merge(RG=RG,sRG=sRG,outDir=outPrefix+'mRG/')
+        #sys.exit('ERROR: at least one of cRG and sRG directory contain circFL_Normal.txt')
+        plog('No cRG and sRG found: merge')
+        merge(RG=RG,cRG=RG,outDir=outPrefix+'mRG/')
     else:
-        plog('Merge results from RG ,cRG and sRG: merge')
-        merge(RG=RG,cRG=cRG,sRG=sRG,outDir=outPrefix+'mRG/')
-
+        if cRG_N and (not sRG_N):
+            plog('Merge results from RG and cRG: merge')
+            merge(RG=RG,cRG=cRG,outDir=outPrefix+'mRG/')
+        elif sRG_N and (not cRG_N):
+            plog('Merge results from RG and sRG: merge')
+            merge(RG=RG,sRG=sRG,outDir=outPrefix+'mRG/')
+        else:
+            plog('Merge results from RG ,cRG and sRG: merge')
+            merge(RG=RG,cRG=cRG,sRG=sRG,outDir=outPrefix+'mRG/')
+    
+    if not os.path.exists(RG+'test.minimap2.bam'):
+        plog('Transform SAM to BAM: sam2bam')
+        sam2bam(RG+'test.minimap2.sam',RG+'test.minimap2.bam')
+    
     plog('Filter circFL results: filterOut')
     filterOut(RG,outPrefix+'mRG/',fastq,genome,thread,rmskFile)
     

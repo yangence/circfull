@@ -197,10 +197,15 @@ def fusion2ConstructFL(genomeFile,outPrefix,adjFusionNum,thread):
     FL_result=FL_result[FL_result['start']!=0]
     FL_result=FL_result[FL_result['end']!=0]
     FL_result=FL_result[FL_result['exon_start']!='']
-    FL_result['len']=FL_result.apply(getExonLen,axis=1)
-    FL_result['motif']=FL_result.apply(lambda x:x['leftSeq']+x['rightSeq'],axis=1)
-    FL_result['exonNum']=FL_result.apply(lambda x:len(x['exon_start'].split(',')),axis=1)
+    FL_result.loc[:,'len']=range(FL_result.shape[0])
+    FL_result.loc[:,'motif']=range(FL_result.shape[0])
+    FL_result.loc[:,'exonNum']=range(FL_result.shape[0])
+    FL_result.loc[:,'len']=FL_result.apply(getExonLen,axis=1)
+    FL_result.loc[:,'motif']=FL_result.apply(lambda x:x['leftSeq']+x['rightSeq'],axis=1)
+    FL_result.loc[:,'exonNum']=FL_result.apply(lambda x:len(x['exon_start'].split(',')),axis=1)
     FL_result=FL_result[['circID','chr','start','end','len','exonNum','exon_start','exon_end','motif','leftSeq','rightSeq','exon_leftSeq','exon_rightSeq']]
     FL_result=FL_result.sort_values(['circID','len'])
     FL_result.to_csv(outPrefix+"constructFL_Fusion2_"+adjFusionNum+".txt",sep="\t")
+    if FL_result.shape[0]==0:
+        return(False)
     return(True)

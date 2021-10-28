@@ -8,7 +8,7 @@ def FL2bed(FL_noDup):
     FL_bed['thickStart']=0
     FL_bed['thickEnd']=0
     FL_bed['itemRgb']=0
-    exonNum=FL_noDup['exon_start'].map(lambda x: len(x.split(','))).tolist()
+    exonNum=FL_noDup['exon_start'].map(lambda x: len(str(x).split(','))).tolist()
     FL_bed['blockCount ']=exonNum
     exonSize=FL_noDup.apply(lambda x: getSize(x),axis=1).tolist()
     FL_bed['blockSizes']=exonSize
@@ -41,14 +41,14 @@ def fus2toNormal(x):
     geneName=','.join(list(set(geneName)))
     return(ID,circID,tmpChr,start,end,tmpLen,exonNum,exons_start,exons_end,motif,leftSeq,rightSeq,exon_leftSeq,exon_rightSeq,strand,geneName)
 def getSize(x):
-    start=[int(i) for i in x['exon_start'].split(',')]
-    end=[int(i) for i in x['exon_end'].split(',')]
+    start=[int(i) for i in str(x['exon_start']).split(',')]
+    end=[int(i) for i in str(x['exon_end']).split(',')]
     size=[]
     for i in range(len(start)):
         size.append(str(end[i]-start[i]+1))
     return(','.join(size))
 def getStart(x):
-    start=[int(i) for i in x['exon_start'].split(',')]
+    start=[int(i) for i in str(x['exon_start']).split(',')]
     s0=x['start']
     sarry=[]
     for i in range(len(start)):
@@ -122,6 +122,8 @@ def circFL_output(outPrefix):
     if FL_fus2_same.shape[0]>0:
         FL_fus2_same=pd.DataFrame(FL_fus2_same.apply(fus2toNormal,axis=1).tolist(),columns=FL.columns)
         FL=pd.concat([FL,FL_fus2_same])
+    FL['exon_start']=FL['exon_start'].map(str).tolist()
+    FL['exon_end']=FL['exon_end'].map(str).tolist()
     FL['isoID']=FL['chr']+'|'+FL['exon_start']+'|'+FL['exon_end']
     FL_isocount=FL.loc[:,'isoID'].value_counts()
     FL.index=FL['isoID']
@@ -143,6 +145,7 @@ def circFL_output(outPrefix):
     FL_noDup=FL_noDup.loc[:,['circID','isoID','chr','start','end','len','exonNum','exon_start','exon_end','motif','leftSeq','rightSeq','exon_leftSeq','exon_rightSeq','strand','geneName','readCount','readID']]
    
     FL_noDup.to_csv(outPrefix+'circFL_Normal.txt',sep='\t',header=True,index=None)
-
+    FL_noDup['exon_start']=FL_noDup['exon_start'].map(str).tolist()
+    FL_noDup['exon_end']=FL_noDup['exon_end'].map(str).tolist()
     FL_bed=FL2bed(FL_noDup)
     FL_bed.to_csv(outPrefix+'circFL_Normal.bed',sep='\t',header=None,index=None)

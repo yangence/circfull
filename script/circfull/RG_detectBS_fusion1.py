@@ -139,7 +139,7 @@ def getBs_fusion1(rlist):
     ','.join([str(i) for i in Mleft_second]),
     str(faStrand[currentID]))
     return(tmpOut)
-    
+
 def detectBS_fusion1(options):
     global isSecond,faPos,faStrand,faOutput,outPrefixTmp,genome
     genomeFile=options[0]

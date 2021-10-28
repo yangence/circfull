@@ -172,12 +172,16 @@ def fusion2AdjFL(options):
         ExonSdict=np.load(path+'ExonSdict.npy',allow_pickle=True).item()
         ExonEdict=np.load(path+'ExonEdict.npy',allow_pickle=True).item()
         strandDict=np.load(path+'strandDict.npy',allow_pickle=True).item()
-
-    pool=Pool(processes=thread)
-    consFL=pool.map(mapExon,[i for i in range(consFLraw.shape[0])])
-    pool.close()
-    pool.join()
-    consFL=pd.DataFrame(consFL)
+    
+    if consFLraw.shape[0]>1:
+        pool=Pool(processes=thread)
+        consFL=pool.map(mapExon,[i for i in range(consFLraw.shape[0])])
+        pool.close()
+        pool.join()
+        consFL=pd.DataFrame(consFL)
+    else:
+        tmp=mapExon(0)
+        consFL=pd.DataFrame(dict(tmp),index=[0])
     # common adjust rare internal structure
     consFL['key1']=consFL['circID']+'|'+consFL['exonNum'].map(str)+'|'+consFL['len'].map(str)
     consFL['key2']=consFL['circID']+'|'+consFL['exonNum'].map(str)

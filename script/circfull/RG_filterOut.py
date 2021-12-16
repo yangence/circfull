@@ -85,7 +85,7 @@ def evalCirc(i):
     readID=tmp['readID'].split(',')
     countBS=0
     count=0
-    exon_start=[int(i) for i in tmp['exon_start'].split(',')]
+    exon_start=[int(i) for i in str(tmp['exon_start']).split(',')]
     exon_start=[i-exon_start[0] for i in exon_start]
     
     count_SE=0 # the potential chimeric reads

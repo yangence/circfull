@@ -218,7 +218,7 @@ def filterBS(options):
 
     BSFile=outPrefix+"BS_Normal.txt"
     fout=open(outPrefix+'BS_Normal_adj.txt','w')
-    BS_Normal=pd.read_csv(BSFile,names=['ID','chr','start','end','leftSeq','rightSeq'],sep='\t')
+    BS_Normal=pd.read_csv(BSFile,names=['ID','chr','start','end','leftSeq','rightSeq'],sep='\t',dtype=object)
     BS_Normal=BS_Normal.dropna(axis = 0)
     if len(options)>4:
         isSecond=True

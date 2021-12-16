@@ -65,7 +65,7 @@ def getStrand(x):
                 if gtf.end==x['end_second']-1:
                     strand_second=gtf.strand
                     break
-    return([strand_first,strand_second])
+    return(strand_first,strand_second)
 def getGene(chr,start,end,strand):
     tmp={'chr':chr,'start':start,'end':end,'strand':strand}
     geneList1=[]
@@ -177,13 +177,10 @@ def fusion2CombinFL(options):
     tabixfile = pysam.TabixFile(gtfFile)
 
     if len(options)<=4: # no stranded
-        strandList=pd.DataFrame(consFL_all_pass.apply(getStrand,axis=1))
+        strandList=pd.DataFrame(list(consFL_all_pass.apply(getStrand,axis=1)))
         consFL_all_pass['strand_first']=strandList.iloc[:,0].to_list()
         consFL_all_pass['strand_second']=strandList.iloc[:,1].to_list()
 
-
-
-        
     geneNameList1=[]
     geneNameList2=[]
     for i in range(consFL_all_pass.shape[0]):

@@ -177,7 +177,7 @@ def fusion1CombinFL(options):
     tabixfile = pysam.TabixFile(gtfFile)
 
     if len(options)<=4: # no stranded
-        strandList=pd.DataFrame(consFL_all_pass.apply(getStrand,axis=1))
+        strandList=pd.DataFrame(list(consFL_all_pass.apply(getStrand,axis=1)))
         consFL_all_pass['strand_first']=strandList.iloc[:,0].to_list()
         consFL_all_pass['strand_second']=strandList.iloc[:,1].to_list()
 

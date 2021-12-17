@@ -185,8 +185,14 @@ def fusion2CombinFL(options):
     geneNameList2=[]
     for i in range(consFL_all_pass.shape[0]):
         tmp=consFL_all_pass.iloc[i]
-        geneNameList1.append(getGene(tmp['chr_first'],tmp['start_first'],tmp['end_first'],tmp['strand_first']))
-        geneNameList2.append(getGene(tmp['chr_second'],tmp['start_second'],tmp['end_second'],tmp['strand_second']))
+        if tmp['chr_first'] in tabixfile.contigs:
+            geneNameList1.append(getGene(tmp['chr_first'],tmp['start_first'],tmp['end_first'],tmp['strand_first']))
+        else:
+            geneNameList1.append('intergenic')
+        if tmp['chr_second'] in tabixfile.contigs:
+            geneNameList2.append(getGene(tmp['chr_second'],tmp['start_second'],tmp['end_second'],tmp['strand_second']))
+        else:
+            geneNameList2.append('intergenic')
         
     consFL_all_pass['geneName_first']=geneNameList1
     consFL_all_pass['geneName_second']=geneNameList2

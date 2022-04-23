@@ -1,112 +1,15 @@
 import numpy as np, pandas as pd, os,sys
 from multiprocessing import Pool
 from progressbar import *
-def SWalign(seq1,seq2):
-    matchS = 3; mismatchS = -6; gapopenS = -5; gapextendS = -2
-    len1=len(seq1)
-    len2=len(seq2)
-    scoreMat=np.zeros([len1+1,len2+1])
-    gapMat_right=np.zeros([len1+1,len2+1])
-    gapMat_down=np.zeros([len1+1,len2+1])
-    indexMat=[[[] for i in range(len2+1)] for i in range(len1+1)]
-    for i in range(len1):
-        for j in range(len2):
-            if seq1[i] == seq2[j]:
-                baseS=scoreMat[i,j]+matchS
-            else:
-                baseS=scoreMat[i,j]+mismatchS
-            if gapMat_right[i+1,j] == 0:
-                rightS=scoreMat[i+1,j]+gapopenS
-            else:
-                rightS=scoreMat[i+1,j]+gapextendS
-            if gapMat_down[i,j+1] == 0:
-                downS=scoreMat[i,j+1]+gapopenS
-            else:
-                downS=scoreMat[i,j+1]+gapextendS
-            arrS=[0,baseS,rightS,downS]
-            arrSMax= np.max(arrS)
-            scoreMat[i+1,j+1] =arrSMax
-            if arrS[2] == arrSMax:
-                gapMat_right[i+1,j+1]=1
-                indexMat[i+1][j+1].append([i+1,j])
-            if arrS[3] == arrSMax:
-                gapMat_down[i+1,j+1]=1
-                indexMat[i+1][j+1].append([i,j+1])
-            if arrS[1] == arrSMax:
-                indexMat[i+1][j+1].append([i,j])
-            if arrSMax == 0:
-                indexMat[i+1][j+1]=[]
-            if scoreMat[i,j] == 0:
-                indexMat[i][j]=[]
-    indexMat=np.array(indexMat,dtype=object)
-    scoreMat_max=scoreMat.max()
-    max_idx=[]
-    for i in range(len1):
-        for j in range(len2):
-            if scoreMat[i+1,j+1]==scoreMat_max:
-                max_idx.append([i+1,j+1])
-    return(indexMat,max_idx)
-def traceBack(indexMat,max_idx):
-    if len(max_idx) == 0:
-        return([])
-    else:
-        midx=[]
-        for i in max_idx:           
-            new_idx=traceBack(indexMat,indexMat[i[0],i[1]])
-            if len(new_idx)==0:
-                all_idx=[i]
-                midx.append(all_idx)
-            for j in new_idx:
-                all_idx=[i]
-                all_idx.extend(j)
-                midx.append(all_idx)
-            
-           
-        return(midx)
-
-def calIdentify(seq1,seq2,midx,isSeq=False):
-    seq1_match=[]
-    seq2_match=[]
-    for i in midx:
-        seq1_each=''
-        seq2_each=''
-        i=i[::-1]
-        if len(i)<=2:
-            continue
-        lastSeq1=i[1][0]
-        lastSeq2=i[1][1]
-        seq1_each+=seq1[lastSeq1-1]
-        seq2_each+=seq2[lastSeq2-1]
-        for j in i[2:]:
-            if j[0] == lastSeq1:
-                seq1_each+='-'
-            else:
-                lastSeq1=j[0]
-                seq1_each+=seq1[lastSeq1-1]
-            if j[1] == lastSeq2:
-                seq2_each+='-'
-            else:
-                lastSeq2=j[1]
-                seq2_each+=seq2[lastSeq2-1]
-        seq1_match.append(seq1_each)
-        seq2_match.append(seq2_each)
-    identify_num=[0]
-    for i in range(len(seq1_match)):
-        seq1_each=seq1_match[i]
-        seq2_each=seq2_match[i]
-        each_identify=0
-        for j in range(len(seq1_each)):
-            if seq1_each[j] == seq2_each[j]:
-                each_identify+=1
-        identify_num.append(each_identify)
-    if isSeq:
-        return([seq1_match,seq2_match,identify_num])
-    return(max(identify_num))
+from ssw import Aligner
+matchS = 3; mismatchS = -6; gapopenS = -5; gapextendS = -2
     
 def getALL(seq1,seq2,isSeq=False):
-    [indexMat,max_idx]=SWalign(seq1,seq2)
-    midx=traceBack(indexMat,max_idx)
-    return(calIdentify(seq1,seq2,midx,isSeq))
+    read_align=Aligner(reference=seq1,molecule='dna',gap_open=5,gap_extend=2)
+    read_align.matrix.match=3
+    read_align.matrix.mimatch=-6
+    read_align_result=read_align.align(seq2,revcomp=False)
+    return(read_align_result.score)
 
 def getScoremat(seq):
     [ID,leftSeq,rightSeq] = seq

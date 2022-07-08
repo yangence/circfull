@@ -1,5 +1,5 @@
 '''
-Usage: circfull RG -f fastq -g genome -a anno [-t threads] [-r] [-m rmsk] [-o output]
+Usage: circfull RG -f fastq -g genome -a anno [-b bed] [-t threads] [-r] [-m rmsk] [-o output]
 
 Options:
     -h --help                   Show help message.
@@ -7,6 +7,7 @@ Options:
     -f fastq                    circFL-seq fastq file.
     -g genome                   Fasta file of genome.
     -a anno                     Tabix indexed gtf file of gene annotation.
+    -b bed                      A BED file to assist mapping.
     -t threads                  Number of threads [default: 20].
     -r                          Filter out low quality circRNA.
     -m rmsk                     Filter out low quality circRNA with a huge overlap of repeat region. Only works with '-r'.
@@ -46,6 +47,8 @@ def RG(options):
         rmskFile=options['-m']
         plog('Check rmsk file')
         fileCheck(rmskFile)
+    if options['-b']:
+        bedFile=options['-b']
     fastq=options['-f']
     genome=options['-g']
     anno=options['-a']
@@ -71,9 +74,13 @@ def RG(options):
     sam=RG_outPrefix+'test.minimap2.sam'
     bam=RG_outPrefix+'test.minimap2.bam'
    
-    plog('Align fastq to reference genome: alignFastq')
     if not os.path.exists(sam):
-        alignFastq(fastq,genome,sam,thread)
+        if options['-b']:
+            plog('Align fastq to reference genome: alignFastq_bed')
+            alignFastq_bed(fastq,genome,sam,thread,bedFile)
+        else:
+            plog('Align fastq to reference genome: alignFastq')
+            alignFastq(fastq,genome,sam,thread)
 
     plog('Transform SAM to BAM: sam2bam')
     if not os.path.exists(bam):

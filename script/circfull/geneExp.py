@@ -17,6 +17,9 @@ def getGeneID(x):
         geneID=x.split('|')[0].split(',')[1][1:-1]
         geneName=x.split('|')[2].split(':')[0].split(',')[1][1:-1]
         return(geneID)
+    elif x[0:2]=='EN':
+        geneID=x.split('|')[2].split(':')[0]
+        return(geneID)
     else:
         return(x)
 
@@ -24,8 +27,20 @@ def geneName(x):
     if x[0:7]=='gene_id':
         geneName=x.split('|')[2].split(':')[0].split(',')[1][1:-1]
         return(geneName)
+    elif x[0:2]=='EN':
+        geneName=x.split('|')[2].split(':')[0]
+        return(geneName)
     else:
         return(x)
+
+def geneType(x):
+    if x[0:7]=='gene_id':
+        return('')
+    elif x[0:2]=='EN':
+        type=x.split('|')[1]
+        return(type)
+    else:
+        return('')
 
 def geneCount(outPrefix):
     geneMap=pd.read_csv(outPrefix+'geneMap.paf',sep='\t',header=None,usecols=[0,5])
@@ -46,7 +61,8 @@ def geneCount(outPrefix):
 
 
 def map2ref(ref,fastq,thread,outPrefix):
-    os.system("minimap2 -x splice -t %i %s %s >%s 2>/dev/null" % (thread,ref,fastq,outPrefix+'geneMap.paf'))
+    if not os.path.exists(outPrefix+'geneMap.paf'):
+        os.system("minimap2 -x splice -t %i %s %s >%s 2>/dev/null" % (thread,ref,fastq,outPrefix+'geneMap.paf'))
 
 def geneExp(options):
     fastq=options['-f']

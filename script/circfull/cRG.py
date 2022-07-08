@@ -1,5 +1,5 @@
 '''
-Usage: circfull cRG -f DNSC -g genome -a anno [-t threads] [-u] [-o output]
+Usage: circfull cRG -f DNSC -g genome -a anno [-b bed] [-t threads] [-u] [-o output]
 
 Options:
     -h --help                   Show help message.
@@ -7,6 +7,7 @@ Options:
     -f DNSC                     DNSC directory.
     -g genome                   Fasta file of genome.
     -a anno                     Tabix indexed gtf file of gene annotation.
+    -b bed                      A BED file to assist mapping.
     -t threads                  Number of threads [default: 20].
     -u                          Stranded reads.
     -o output                   Output dir [default: circFL_out].

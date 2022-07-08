@@ -1,11 +1,12 @@
 '''
-Usage: circfull sRG -g genome -a anno [-s strandDir] [-t threads] [-r] [-o output]
+Usage: circfull sRG -g genome -a anno [-b bed] [-s strandDir] [-t threads] [-r] [-o output]
 
 Options:
     -h --help                   Show help message.
     -v --version                Show version.
     -g genome                   Fasta file of genome.
     -a anno                     Tabix indexed gtf file of gene annotation.
+    -b bed                      A BED file to assist mapping.
     -t threads                  Number of threads [default: 20].
     -s dir                      Strand dir [default: circFL_out].
     -r                          Filter out false discovery.
@@ -46,7 +47,8 @@ def sRG(options,cRG=False):
     anno=options['-a']
     thread=int(options['-t'])
     outDir=options['-o']
-
+    if options['-b']:
+        bedFile=options['-b']
     plog('Check anno file')
     readGTFfile(anno)
     plog('Check genome file')
@@ -83,8 +85,12 @@ def sRG(options,cRG=False):
     sam=RG_outPrefix+'test.minimap2.sam'
     bam=RG_outPrefix+'test.minimap2.bam'
     
-    plog('Align fastq to reference genome: alignFastq')
-    alignFastq(fastq,genome,sam,thread,True)
+    if options['-b']:
+        plog('Align fastq to reference genome: alignFastq_bed')
+        alignFastq_bed(fastq,genome,sam,thread,bedFile,True)
+    else:
+        plog('Align fastq to reference genome: alignFastq')
+        alignFastq(fastq,genome,sam,thread,True)
 
     plog('Transform SAM to BAM: sam2bam')
     sam2bam(sam,bam)

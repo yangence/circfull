@@ -17,7 +17,38 @@ def getR2I(dfa,dfb=None):
         for j in reads:
             read2iso[j]=isoID
     return(read2iso)
+
+def getR2I_antisense(dfa,dfb=None):
+    read2iso={}
+    read2geneName={}
+    read_keep={}
+    if type(dfb)!=type(None):
+        for i in range(dfb.shape[0]):
+            tmp=dfb.iloc[i,]
+            reads=tmp['readID'].split(',')
+            isoID=tmp['isoID']
+            geneName=str(tmp['geneName'])
+            for j in reads:
+                read2iso[j]=isoID
+                read2geneName[j]=str(geneName)
     
+    for i in range(dfa.shape[0]):
+        tmp=dfa.iloc[i,]
+        reads=tmp['readID'].split(',')
+        isoID=tmp['isoID']
+        tmp_a_geneName=str(tmp['geneName'])
+        for j in reads:
+            if read2geneName.__contains__(j):  
+                tmp_b_end=read2geneName[j][-4:]
+                if not pd.isna(tmp_b_end):
+                    if tmp_b_end=='-AS1':
+                        tmp_a_end=tmp_a_geneName[-4:]                        
+                        if not pd.isna(tmp_a_end):
+                            if tmp_a_end!='-AS1':
+                                read_keep[j]=1
+            read2iso[j]=isoID
+    return(read2iso,read_keep)  
+   
 def getI2R(read2iso):
     iso2read={}
     for read in read2iso.keys():
@@ -58,7 +89,7 @@ def read2strand(df):
             r2s[j]=strand
     return(r2s)
 
-def changeStrand(df,r2s,r2i,dfs):
+def changeStrand(df,r2s,r2i,dfs,read_keep):
     ndfA=pd.concat([df,dfs])
     ndfA=ndfA.drop_duplicates('isoID')
     ndfA.index=ndfA.isoID
@@ -71,7 +102,7 @@ def changeStrand(df,r2s,r2i,dfs):
         isoID_dict={}
         for r in reads:
             if r2s.__contains__(r):
-                if r2s[r]==strand:
+                if r2s[r]==strand or read_keep.__contains__(r):
                     strand_score+=1
                 else:
                     strand_score+=-1
@@ -111,10 +142,10 @@ def merge(RG,outDir,cRG=False,sRG=False):
         ndf1_2=getMdf(ndf1,ndf2,iso2read)
         if sRG:
             ndf1_2_strand=ndf1_2.loc[ndf1_2.strand!='U',:]
-            read2iso=getR2I(ndf1_2_strand,ndf3)
+            read2iso,read_keep=getR2I_antisense(ndf1_2_strand,ndf3)
             iso2read=getI2R(read2iso)
             ndf1_2_3=getMdf(ndf1_2_strand,ndf3,iso2read)
-            ndf1_2_3=changeStrand(ndf1_2_3,ndf3_r2s,ndf3_r2i,ndf3)
+            ndf1_2_3=changeStrand(ndf1_2_3,ndf3_r2s,ndf3_r2i,ndf3,read_keep)
             ndf1_2_3.to_csv(outDir+'circFL_Normal.txt',sep='\t',index=None)
             ndf1_2_3_bed=FL2bed(ndf1_2_3)
             ndf1_2_3_bed.to_csv(outDir+'circFL_Normal.bed',sep='\t',header=None,index=None)
@@ -124,10 +155,10 @@ def merge(RG,outDir,cRG=False,sRG=False):
             ndf1_2_bed.to_csv(outDir+'circFL_Normal.bed',sep='\t',header=None,index=None)
     else:
         ndf1_strand=ndf1.loc[ndf1.strand!='U',:]
-        read2iso=getR2I(ndf1_strand,ndf3)
+        read2iso,read_keep=getR2I_antisense(ndf1_strand,ndf3)
         iso2read=getI2R(read2iso)
         ndf1_3=getMdf(ndf1_strand,ndf3,iso2read)
-        ndf1_3=changeStrand(ndf1_3,ndf3_r2s,ndf3_r2i,ndf3)
+        ndf1_3=changeStrand(ndf1_3,ndf3_r2s,ndf3_r2i,ndf3,read_keep)
         ndf1_3.to_csv(outDir+'circFL_Normal.txt',sep='\t',index=None)
         ndf1_3_bed=FL2bed(ndf1_3)
         ndf1_3_bed.to_csv(outDir+'circFL_Normal.bed',sep='\t',header=None,index=None)

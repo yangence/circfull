@@ -71,9 +71,9 @@ def alignFastq(fastq,genome,sam,thread,strand=False):
 
 def alignFastq_bed(fastq,genome,sam,thread,bed,strand=False):
     if strand:
-        os.system('minimap2 -ax splice -uf -p 0.5 -t %i -w 4 --junc-bed %s --secondary=no %s %s>%s 2>/dev/null' % (thread, bed, genome, fastq,sam) )
+        os.system('minimap2 -ax splice -uf -t %i -k 14 -w 4 --junc-bed %s --secondary=no %s %s>%s 2>/dev/null' % (thread, bed, genome, fastq,sam) )
     else:
-        os.system('minimap2 -ax splice  -p 0.5 -t %i  -w 4 --junc-bed  %s --secondary=no %s %s>%s 2>/dev/null' % (thread, bed, genome, fastq,sam) )
+        os.system('minimap2 -ax splice -ub -t %i  -k 14 -w 4 --junc-bed  %s --secondary=no %s %s>%s 2>/dev/null' % (thread, bed, genome, fastq,sam) )
 
 def sam2bam(sam,bam):
     os.system('samtools sort -m 10G -@ 8 %s -o %s  2>/dev/null' % (sam,bam))

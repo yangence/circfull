@@ -1,5 +1,5 @@
 '''
-Usage: circfull RG -f fastq -g genome -a anno [-t threads] [-r] [-m rmsk] [-o output]
+Usage: circfull RG -f fastq -g genome -a anno [-b bed] [-t threads] [-r] [-m rmsk] [-o output]
 
 Options:
     -h --help                   Show help message.
@@ -7,6 +7,7 @@ Options:
     -f fastq                    circFL-seq fastq file.
     -g genome                   Fasta file of genome.
     -a anno                     Tabix indexed gtf file of gene annotation.
+    -b bed                      A BED file to assist mapping.
     -t threads                  Number of threads [default: 20].
     -r                          Filter out low quality circRNA.
     -m rmsk                     Filter out low quality circRNA with a huge overlap of repeat region. Only works with '-r'.
@@ -46,6 +47,8 @@ def RG(options):
         rmskFile=options['-m']
         plog('Check rmsk file')
         fileCheck(rmskFile)
+    if options['-b']:
+        bedFile=options['-b']
     fastq=options['-f']
     genome=options['-g']
     anno=options['-a']
@@ -70,30 +73,42 @@ def RG(options):
     createDir(outPrefix);createDir(RG_outPrefix);createDir(RG_tmp_outPrefix);createDir(fus_outPrefix);createDir(fus_tmp_outPrefix)
     sam=RG_outPrefix+'test.minimap2.sam'
     bam=RG_outPrefix+'test.minimap2.bam'
-    
-    plog('Align fastq to reference genome: alignFastq')
-    alignFastq(fastq,genome,sam,thread)
+   
+    if not os.path.exists(sam):
+        if options['-b']:
+            plog('Align fastq to reference genome: alignFastq_bed')
+            alignFastq_bed(fastq,genome,sam,thread,bedFile)
+        else:
+            plog('Align fastq to reference genome: alignFastq')
+            alignFastq(fastq,genome,sam,thread)
 
     plog('Transform SAM to BAM: sam2bam')
-    sam2bam(sam,bam)
+    if not os.path.exists(bam):
+        sam2bam(sam,bam)
     
     plog('Analyze SAM file: explainFL')
-    explainFL(genome,RG_outPrefix,sam)
+    if not os.path.exists(RG_outPrefix+'explainFL.txt'):
+        explainFL(genome,RG_outPrefix,sam)
     
     plog('Filter and classify candidates: filterFL')
-    filterFL(genome,RG_outPrefix,fastq,thread)
+    if not os.path.exists(RG_outPrefix+'explainFL_Normal.txt'):
+        filterFL(genome,RG_outPrefix,fastq,thread)
     
     plog('Adjust normal: adjExplainNormal')
-    adjExplainNormal(genome,RG_outPrefix,thread)
+    if not os.path.exists(RG_outPrefix+'explainFL_Normal_adj.txt'):
+        adjExplainNormal(genome,RG_outPrefix,thread)
     
     plog('Re-alignment to pseudo reference: detectBS')
-    detectBS([genome,RG_outPrefix,fastq,thread])
+    if not os.path.exists(RG_outPrefix+'BS_Normal.txt'):
+        detectBS([genome,RG_outPrefix,fastq,thread])
     
     plog('Filter BS: filterBS')
-    filterBS([genome,anno,RG_outPrefix,thread])
+    if not os.path.exists(RG_outPrefix+'BS_Normal_adj.txt'):
+        filterBS([genome,anno,RG_outPrefix,thread])
     
     plog('Construct FL-circRNA: constructFL')
-    constructFL([genome,RG_outPrefix,thread])
+    if not os.path.exists(RG_outPrefix+'constructFL_Normal.txt'):
+    	constructFL([genome,RG_outPrefix,thread])
     
     plog('Adjust FL-circRNA: adjFL')
     adjFL([genome,anno,RG_outPrefix,thread])

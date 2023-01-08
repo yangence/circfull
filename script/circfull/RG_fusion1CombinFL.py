@@ -174,6 +174,8 @@ def fusion1CombinFL(options):
     fusionTH['usage']=(fusionTH.end-fusionTH.start+1)/fusionTH.readLen
     fusionTH=fusionTH.loc[(fusionTH.copyNum>1.2) &(fusionTH.usage>0.5)]
     consFL_all_pass=consFL_all.loc[consFL_all.index.isin(set(consFL_all.index)-set(fusionTH['ID']))].copy()
+    if consFL_all_pass.shape[0]==0:
+        return
     tabixfile = pysam.TabixFile(gtfFile)
 
     if len(options)<=4: # no stranded

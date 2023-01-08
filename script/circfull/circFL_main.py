@@ -24,6 +24,7 @@ Command:
     anno           Annotate full-length circRNA.
     geneExp        Quantify gene expression to evaluate linear RNA residual
     var            Calling variants in circRNA.
+    partial        Count partial circRNA.
 '''
 
 def main():
@@ -59,6 +60,9 @@ def main():
     elif sys.argv[1] == 'var':
         import circfull.var as var
         var.var(docopt(var.__doc__, version=__version__))
+    elif sys.argv[1] == 'partial':
+        import circfull.partial as partial
+        partial.partial(docopt(partial.__doc__, version=__version__))
     else:
         sys.exit(helpInfo)
 

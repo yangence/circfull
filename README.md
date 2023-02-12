@@ -71,7 +71,7 @@ Command:
 
 ### RG
 ```
-Usage: circfull RG -f fastq -g genome -a anno [-t threads] [-r] [-o output]
+Usage: circfull RG -f fastq -g genome -a anno [-u] [-t threads] [-r] [-o output]
 
 Options:
     -h --help                   Show help message.
@@ -79,6 +79,7 @@ Options:
     -f fastq                    circFL-seq fastq file.
     -g genome                   Fasta file of genome.
     -a anno                     Tabix indexed gtf file of gene annotation.
+    -u                          Turn off fusion-circRNA detection.
     -t threads                  Number of threads [default: 20].
     -r                          Filter out false discovery.
     -o output                   Output dir [default: circFL_out].

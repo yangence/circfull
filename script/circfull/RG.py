@@ -1,5 +1,5 @@
 '''
-Usage: circfull RG -f fastq -g genome -a anno [-b bed] [-t threads] [-r] [-m rmsk] [-o output]
+Usage: circfull RG -f fastq -g genome -a anno [-u] [-b bed] [-t threads] [-r] [-m rmsk] [-o output]
 
 Options:
     -h --help                   Show help message.
@@ -7,6 +7,7 @@ Options:
     -f fastq                    circFL-seq fastq file.
     -g genome                   Fasta file of genome.
     -a anno                     Tabix indexed gtf file of gene annotation.
+    -u                          Turn off fusion-circRNA detection.
     -b bed                      A BED file to assist mapping.
     -t threads                  Number of threads [default: 20].
     -r                          Filter out low quality circRNA.
@@ -40,6 +41,9 @@ from .RG_filterOut import filterOut
 
 def RG(options):
     isFilter=False
+    isFC=True
+    if options['-u']:
+        isFC=False
     if options['-r']:
         isFilter=True
     rmskFile=False
@@ -117,62 +121,63 @@ def RG(options):
     
     plog('Annotate circRNA: annotateNormal')
     annotateNormal([RG_outPrefix,anno])
-    
-    if os.path.exists(RG_outPrefix+'explainFL_Fusion1.txt')|os.path.exists(RG_outPrefix+'explainFL_Fusion2.txt'):
-        plog('Analyze fusion circRNA: fusionFq')
-        fusionFq(fastq,RG_outPrefix)
-    
-    if os.path.exists(RG_outPrefix+'explainFL_Fusion1.txt'):
+    if isFC:
+        if os.path.exists(RG_outPrefix+'explainFL_Fusion1.txt')|os.path.exists(RG_outPrefix+'explainFL_Fusion2.txt'):
+            plog('Analyze fusion circRNA: fusionFq')
+            fusionFq(fastq,RG_outPrefix)
         
-        os.system('cp %s %s' %(RG_outPrefix+'explainFL_Fusion1.txt',fus_outPrefix+'explainFL_Fusion1.txt'))
-        plog('Re-alignment to pseudo reference: detectBS_fusion1')
-        BS_Fusion1=detectBS_fusion1([genome,fus_outPrefix,thread])
-        if BS_Fusion1:
-            plog('Filter fusion BS: filterBS_fusion1')
-            isPass_filter=filterBS_fusion1(genome,anno,fus_outPrefix)
-            if isPass_filter:
-                plog('Construct fusion FL-circRNA: fusion1ConstructFL')
-                f1_cf_1=fusion1ConstructFL(genome,fus_outPrefix,'1',thread)
-                f1_cf_2=fusion1ConstructFL(genome,fus_outPrefix,'2',thread)
-                if f1_cf_1 and f1_cf_2:
-                     plog('Adjust fusion FL-circRNA: fusion1AdjFL')
-                     fusion1AdjFL([genome,anno,fus_outPrefix,'1',thread])
-                     fusion1AdjFL([genome,anno,fus_outPrefix,'2',thread])
-                     plog('Annotate fusion FL-circRNA: fusion1CombinFL')
-                     fusion1CombinFL([genome,fus_outPrefix,anno])
+        if os.path.exists(RG_outPrefix+'explainFL_Fusion1.txt'):
+            
+            os.system('cp %s %s' %(RG_outPrefix+'explainFL_Fusion1.txt',fus_outPrefix+'explainFL_Fusion1.txt'))
+            plog('Re-alignment to pseudo reference: detectBS_fusion1')
+            BS_Fusion1=detectBS_fusion1([genome,fus_outPrefix,thread])
+            if BS_Fusion1:
+                plog('Filter fusion BS: filterBS_fusion1')
+                isPass_filter=filterBS_fusion1(genome,anno,fus_outPrefix)
+                if isPass_filter:
+                    plog('Construct fusion FL-circRNA: fusion1ConstructFL')
+                    f1_cf_1=fusion1ConstructFL(genome,fus_outPrefix,'1',thread)
+                    f1_cf_2=fusion1ConstructFL(genome,fus_outPrefix,'2',thread)
+                    if f1_cf_1 and f1_cf_2:
+                         plog('Adjust fusion FL-circRNA: fusion1AdjFL')
+                         fusion1AdjFL([genome,anno,fus_outPrefix,'1',thread])
+                         fusion1AdjFL([genome,anno,fus_outPrefix,'2',thread])
+                         plog('Annotate fusion FL-circRNA: fusion1CombinFL')
+                         fusion1CombinFL([genome,fus_outPrefix,anno])
+                    else:
+                         plog('No fusion circRNAs from different chromosomes were found!')
                 else:
-                     plog('No fusion circRNAs from different chromosomes were found!')
+                    plog('No fusion circRNAs from different chromosomes were found!')
             else:
                 plog('No fusion circRNAs from different chromosomes were found!')
-        else:
-            plog('No fusion circRNAs from different chromosomes were found!')
-    
-    if os.path.exists(RG_outPrefix+'explainFL_Fusion2.txt'):
         
-        os.system('cp %s %s' %(RG_outPrefix+'explainFL_Fusion2.txt',fus_outPrefix+'explainFL_Fusion2.txt'))
-        plog('Re-alignment to pseudo reference: detectBS_fusion2')
-        BS_Fusion2=detectBS_fusion2([genome,fus_outPrefix,thread])
-        
-        if BS_Fusion2:
-            plog('Filter fusion BS: filterBS_fusion2')
-            isPass_filter=filterBS_fusion2(genome,anno,fus_outPrefix)
-            if isPass_filter:
-                plog('Construct fusion FL-circRNA: fusion2ConstructFL')
-                f2_cf_1=fusion2ConstructFL(genome,fus_outPrefix,'1',thread)
-                f2_cf_2=fusion2ConstructFL(genome,fus_outPrefix,'2',thread)
-                if f2_cf_1 and f2_cf_2:
-                     plog('Adjust fusion FL-circRNA: fusion2AdjFL')
-                     fusion2AdjFL([genome,anno,fus_outPrefix,'1',thread])
-                     fusion2AdjFL([genome,anno,fus_outPrefix,'2',thread])
-                     plog('Annotate fusion FL-circRNA: fusion2CombinFL')
-                     fusion2CombinFL([genome,fus_outPrefix,anno])
+        if os.path.exists(RG_outPrefix+'explainFL_Fusion2.txt'):
+            
+            os.system('cp %s %s' %(RG_outPrefix+'explainFL_Fusion2.txt',fus_outPrefix+'explainFL_Fusion2.txt'))
+            plog('Re-alignment to pseudo reference: detectBS_fusion2')
+            BS_Fusion2=detectBS_fusion2([genome,fus_outPrefix,thread])
+            
+            if BS_Fusion2:
+                plog('Filter fusion BS: filterBS_fusion2')
+                isPass_filter=filterBS_fusion2(genome,anno,fus_outPrefix)
+                if isPass_filter:
+                    plog('Construct fusion FL-circRNA: fusion2ConstructFL')
+                    f2_cf_1=fusion2ConstructFL(genome,fus_outPrefix,'1',thread)
+                    f2_cf_2=fusion2ConstructFL(genome,fus_outPrefix,'2',thread)
+                    if f2_cf_1 and f2_cf_2:
+                         plog('Adjust fusion FL-circRNA: fusion2AdjFL')
+                         fusion2AdjFL([genome,anno,fus_outPrefix,'1',thread])
+                         fusion2AdjFL([genome,anno,fus_outPrefix,'2',thread])
+                         plog('Annotate fusion FL-circRNA: fusion2CombinFL')
+                         fusion2CombinFL([genome,fus_outPrefix,anno])
+                    else:
+                         plog('No fusion circRNAs in a same chromosome were found!')
                 else:
-                     plog('No fusion circRNAs in a same chromosome were found!')
+                    plog('No fusion circRNAs in a same chromosome were found!')
             else:
                 plog('No fusion circRNAs in a same chromosome were found!')
-        else:
-            plog('No fusion circRNAs in a same chromosome were found!')
-    
+    else:
+        plog('Turn off fusion-circRNA detection')    
     plog('Format circFL results: circFL_output')
     circFL_output(RG_outPrefix)
 

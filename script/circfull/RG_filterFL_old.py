@@ -1,7 +1,8 @@
-import numpy as np,pandas as pd,sys,pyfasta,os,pysam
+import numpy as np,pandas as pd,sys,os,pysam
 from interval import Interval # please install by pip install interval
 from multiprocessing import Pool
 from progressbar import *
+from pyfaidx import Fasta
 
 
 
@@ -16,7 +17,7 @@ def getSeq(each):
     chr=each['chr']
     seq=''
     for i in range(len(exonStart)):
-        seq+=genome.sequence({'chr': chr, 'start':exonStart[i], 'stop':exonEnd[i]})
+        seq+=genome.get_seq(chr, exonStart[i],exonEnd[i]).seq
     return(seq)
 
 def calRead(read_list,refLen):
@@ -226,7 +227,7 @@ def getType(i):
 def filterFL(genomeFile,outPrefix,fastqFile,thread):
     global outPrefixTmp, genome,passID,explainFL_pass1,fq_dict
     outPrefixTmp=outPrefix+'tmp/'
-    genome=pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     oldFq=open(fastqFile)
     fileName=outPrefix+'explainFL.txt'
     

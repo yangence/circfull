@@ -29,7 +29,8 @@ cd circfull/script
 pip install -r requirements.txt
 python setup.py install
 ```
-If pip installed pyfasta package goes wrong, try conda install pyfasta 
+
+
 
 ## Required files:
 

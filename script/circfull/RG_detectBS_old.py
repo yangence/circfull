@@ -1,6 +1,7 @@
-import os, sys, pyfasta, pysam, pandas as pd, numpy as np
+import os, sys, pysam, pandas as pd, numpy as np
 from multiprocessing import Pool
 from progressbar import *
+from pyfaidx import Fasta
 hangLen=300
 
 
@@ -120,8 +121,8 @@ def getBs(rlist):
             tmpleft=eachLeft+ExonS[index+1]-eachLen
             BSright.append(tmpright)
             BSleft.append(tmpleft)
-            Mright.append(genome.sequence({'chr': eachChr, 'start':tmpright+1, 'stop':tmpright+2}).upper())
-            Mleft.append(genome.sequence({'chr': eachChr, 'start':tmpleft-2, 'stop':tmpleft-1}).upper())
+            Mright.append(genome.get_seq(eachChr, tmpright+1, tmpright+2).seq.upper())
+            Mleft.append(genome.get_seq(eachChr, tmpleft-2, tmpleft-1).seq.upper())
     samfile.close()
     os.remove(outPrefixTmp+"seq1_"+currentID+".fastq")
     os.remove(outPrefixTmp+"seq2_"+currentID+".fa")
@@ -147,7 +148,7 @@ def detectBS(options):
     FLdf_counts=FLdf['ID'].value_counts()
     FLdf=FLdf.drop_duplicates('ID')
 
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     fastqFile=open(fastqFile)
     fout=open(outPrefix+'BS_Normal.txt','w')
 
@@ -176,7 +177,7 @@ def detectBS(options):
         chr=each['chr']
         exonS=[int(j) for j in each['exon_start'].split(',')]
         exonE=[int(j) for j in each['exon_end'].split(',')]
-        maxFa=genome.sequence({'chr': chr, 'start':exonS[0]+1-hangLen, 'stop':exonE[-1]+hangLen})
+        maxFa=genome.get_seq(chr, exonS[0]+1-hangLen, exonE[-1]+hangLen).seq
         faBS=''
         for j in range(2):
             faBS+=maxFa

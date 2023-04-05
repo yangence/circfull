@@ -1,4 +1,4 @@
-import pandas as pd, numpy as np,pyfasta,sys
+import pandas as pd, numpy as np,sys
 errorLen=40
 def mysplit(x):
     return(len(str(x).split(',')))

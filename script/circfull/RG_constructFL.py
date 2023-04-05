@@ -1,4 +1,5 @@
-import pandas as pd, numpy as np,pyfasta,sys,os
+import pandas as pd, numpy as np,sys,os
+from pyfaidx import Fasta
 from multiprocessing import Pool
 errorLen=40
 hangLen=300 # consistent with detectBS.py
@@ -13,7 +14,7 @@ def getLeftSeq(x):
     x=[int(i) for i in x['exon_start'].split(',')]
     y=[]
     for i in x:
-        y.append(genome.sequence({'chr': chr, 'start':i-2, 'stop':i-1}).upper())
+        y.append(genome.get_seq(chr, i-2, i-1).seq.upper())
     return(','.join(y))
 
 def getRightSeq(x):
@@ -23,7 +24,7 @@ def getRightSeq(x):
     x=[int(i) for i in x['exon_end'].split(',')]
     y=[]
     for i in x:
-        y.append(genome.sequence({'chr': chr, 'start':i+1, 'stop':i+2}).upper())
+        y.append(genome.get_seq(chr, i+1, i+2).seq.upper())
     return(','.join(y))
 
 def getCommonPosLeft(pos):    
@@ -127,8 +128,8 @@ def getComBSAdj(i):
             keyValue=cValue[0].split('|')
             tmp['start']=int(keyValue[1])
             tmp['end']=int(keyValue[2])
-            tmp['leftSeq']=genome.sequence({'chr': tmpChr, 'start':tmp['start']-2, 'stop':tmp['start']-1}).upper()
-            tmp['rightSeq']=genome.sequence({'chr': tmpChr, 'start':tmp['end']+1, 'stop':tmp['end']+2}).upper()
+            tmp['leftSeq']=genome.get_seq(tmpChr, tmp['start']-2, tmp['start']-1).seq.upper()
+            tmp['rightSeq']=genome.get_seq(tmpChr, tmp['end']+1, tmp['end']+2).seq.upper()
         else:
             keyValue=[i.split('|')  for i in cValue]
             minValue=float('Inf')
@@ -141,8 +142,8 @@ def getComBSAdj(i):
                     minIndex=j
             tmp['start']=int(keyValue[minIndex][1])
             tmp['end']=int(keyValue[minIndex][2])
-            tmp['leftSeq']=genome.sequence({'chr': tmpChr, 'start':tmp['start']-2, 'stop':tmp['start']-1}).upper()
-            tmp['rightSeq']=genome.sequence({'chr': tmpChr, 'start':tmp['end']+1, 'stop':tmp['end']+2}).upper()
+            tmp['leftSeq']=genome.get_seq(tmpChr, tmp['start']-2, tmp['start']-1).seq.upper()
+            tmp['rightSeq']=genome.get_seq(tmpChr, tmp['end']+1, tmp['end']+2).seq.upper()
     return(tmp)
     
 def selfCluster(x):
@@ -218,7 +219,7 @@ def constructFL(options):
     if len(options)>3:
         strandFile=options[3]
         strandFile.index=strandFile['ID']
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     # start site 0 based
     FLFIle=outPrefix+"explainFL_Normal_adj.txt"
     FL_Normal=pd.read_csv(FLFIle,sep='\t')

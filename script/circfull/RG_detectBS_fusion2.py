@@ -1,5 +1,6 @@
-import os, sys, pyfasta, pysam, pandas as pd, numpy as np
+import os, sys, pysam, pandas as pd, numpy as np
 from multiprocessing import Pool
+from pyfaidx import Fasta
 hangLen=150
 
 
@@ -91,23 +92,23 @@ def getEachPos(rlist,type='type1',strand=True):
                 tmpleft=eachRight+ExonS[index+1]-eachLen
                 BSright.append(tmpright)
                 BSleft.append(tmpleft)
-                Mright.append(genome.sequence({'chr': eachChr1, 'start':tmpright+1, 'stop':tmpright+2}).upper())
-                Mleft.append(genome.sequence({'chr': eachChr2, 'start':tmpleft-2, 'stop':tmpleft-1}).upper())
+                Mright.append(genome.get_seq(eachChr1, tmpright+1, tmpright+2).seq.upper())
+                Mleft.append(genome.get_seq(eachChr2, tmpleft-2, tmpleft-1).seq.upper())
             else:
                 if type == 'type1':
                     tmpright=eachLeft+ExonE[index]-1
                     tmpleft=eachRight-(ExonS[index+1]-eachLen)
                     BSright.append(tmpright)
                     BSleft.append(tmpleft)
-                    Mright.append(genome.sequence({'chr': eachChr1, 'start':tmpright+1, 'stop':tmpright+2}).upper())
-                    Mleft.append(genome.sequence({'chr': eachChr2, 'start':tmpleft+1, 'stop':tmpleft+2,'strand':'-'}).upper())
+                    Mright.append(genome.get_seq(eachChr1, tmpright+1, tmpright+2).seq.upper())
+                    Mleft.append(genome.get_seq(eachChr2, tmpleft+1, tmpleft+2).reverse.complement.seq.upper())
                 else:
                     tmpright=eachLeft-ExonE[index]
                     tmpleft=eachRight+ExonS[index+1]-eachLen
                     BSright.append(tmpright)
                     BSleft.append(tmpleft)
-                    Mright.append(genome.sequence({'chr': eachChr1, 'start':tmpright-2, 'stop':tmpright-1,'strand':'-'}).upper())
-                    Mleft.append(genome.sequence({'chr': eachChr2, 'start':tmpleft-2, 'stop':tmpleft-1}).upper())
+                    Mright.append(genome.get_seq(eachChr1, tmpright-2, tmpright-1).reverse.complement.seq.upper())
+                    Mleft.append(genome.get_seq(eachChr2, tmpleft-2, tmpleft-1).seq.upper())
     samfile.close()
     os.remove(fqFile)
     os.remove(faFile)
@@ -151,7 +152,7 @@ def detectBS_fusion2(options):
     FLdf_fusion2['exon_start']=FLdf_fusion2['exon_start'].map(str)
     FLdf_fusion2['exon_end']=FLdf_fusion2['exon_end'].map(str)
     FLdf_fusion2_ID=list(set(FLdf_fusion2.index))
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
 
     faOutput={}
     faPos={}
@@ -175,12 +176,12 @@ def detectBS_fusion2(options):
         exonS_second=[int(j) for j in each['exon_start'].split(',')]
         exonE_second=[int(j) for j in each['exon_end'].split(',')]
         strand_second=each['strand']
-        type1_first=genome.sequence({'chr': chr_first, 'start':exonS_first[0]+1-hangLen, 'stop':exonE_first[-1]+hangLen})
+        type1_first=genome.get_seq(chr_first, exonS_first[0]+1-hangLen,exonE_first[-1]+hangLen).seq
         type2_first=type1_first
         if strand_first == strand_second:
             faStrand[FLdf_fusion2_ID[i]]=True
             # Type 1 first end + second start
-            type1_second=genome.sequence({'chr': chr_second, 'start':exonS_second[0]+1-hangLen, 'stop':exonE_second[-1]+hangLen})
+            type1_second=genome.get_seq(chr_second,exonS_second[0]+1-hangLen, exonE_second[-1]+hangLen).seq
             type1_BS=type1_first+type1_second
             type1_name=">type1"
             faOutput[FLdf_fusion2_ID[i]+'_type1']="%s\n%s" % (type1_name, type1_BS)
@@ -194,7 +195,7 @@ def detectBS_fusion2(options):
         else:
             faStrand[FLdf_fusion2_ID[i]]=False
             # Type 1 first end + second end
-            type1_second=genome.sequence({'chr': chr_second,  'start':exonS_second[0]+1-hangLen, 'stop':exonE_second[-1]+hangLen,'strand': '-'})
+            type1_second=genome.get_seq(chr_second,  exonS_second[0]+1-hangLen, exonE_second[-1]+hangLen).reverse.complement.seq
             type1_BS=type1_first+type1_second
             type1_name=">type1"
             faOutput[FLdf_fusion2_ID[i]+'_type1']="%s\n%s" % (type1_name, type1_BS)

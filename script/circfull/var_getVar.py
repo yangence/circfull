@@ -1,4 +1,6 @@
-import pandas as pd,pyfasta,os,pysam,time,numpy as np,sys
+import pandas as pd,os,pysam,time,numpy as np,sys
+from pyfaidx import Fasta
+
 from multiprocessing import Pool
 def getVCFLine(vcf):
     fin=open(vcf)
@@ -203,7 +205,7 @@ def getEd(circKey):
 def getVar(genomeFile,RG_out,outPrefix,fastqFile,thread):
     global outPrefixTmp,FLdf,fastqList,faPos,faOutput
     outPrefixTmp=outPrefix+'tmp/'
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
 
 
     FLdf=pd.read_csv(RG_out+'result_Normal.txt',sep='\t')
@@ -239,7 +241,7 @@ def getVar(genomeFile,RG_out,outPrefix,fastqFile,thread):
         chr=each['chr']
         exonS=[int(j) for j in each['exon_start'].split(',')]
         exonE=[int(j) for j in each['exon_end'].split(',')]
-        maxFa=genome.sequence({'chr': chr, 'start':exonS[0]+1-hangLen, 'stop':exonE[-1]+hangLen})
+        maxFa=genome.get_seq(chr, exonS[0]+1-hangLen, exonE[-1]+hangLen).seq
         faBS=''
         for j in range(2):
             faBS+=maxFa

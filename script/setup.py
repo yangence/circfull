@@ -28,7 +28,7 @@ setup(name='circfull',
         'python-intervals',
         'interval',
         'progressbar',
-        'pyfasta',
+        'pyfaidx',
         'mappy'
     ],
     entry_points={

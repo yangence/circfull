@@ -6,5 +6,5 @@ docopt>=0.6.2
 python-intervals
 interval
 progressbar
-pyfasta
+pyfaidx
 mappy

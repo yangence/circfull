@@ -1,4 +1,5 @@
-import pandas as pd, numpy as np,pyfasta, sys,warnings,os
+import pandas as pd, numpy as np, sys,warnings,os
+from pyfaidx import Fasta
 warnings.filterwarnings("ignore")
 errorLen=40
         
@@ -24,7 +25,7 @@ def mapExon(x):
                 tmpleftSpos=int(leftSpos[i])
                 tmpDiff=abs(np.array(tmpExonEdict)-tmpleftSpos)
                 leftSpos[i]=int(tmpExonEdict[np.where(np.array(tmpDiff)==min(tmpDiff))[0][0]])
-                leftSseq[i]=genome.sequence({'chr':chr1,'start':leftSpos[i]+1,'stop':leftSpos[i]+2})
+                leftSseq[i]=genome.get_seq(chr1,leftSpos[i]+1,leftSpos[i]+2).seq
                 isAdj.append('leftS')
             leftEposKey=chr2+'_'+leftEpos[i]
             if ExonSdict.__contains__(leftEposKey):
@@ -32,7 +33,7 @@ def mapExon(x):
                 tmpleftEpos=int(leftEpos[i])
                 tmpDiff=abs(np.array(tmpExonSdict)-tmpleftEpos)
                 leftEpos[i]=tmpExonSdict[np.where(np.array(tmpDiff)==min(tmpDiff))[0][0]]
-                leftEseq[i]=genome.sequence({'chr':chr2,'start':leftEpos[i]-2,'stop':leftEpos[i]-1})
+                leftEseq[i]=genome.get_seq(chr2,leftEpos[i]-2,leftEpos[i]-1).seq
                 isAdj.append('leftE')
         for i in range(len(rightSpos)):
             rightSposKey=chr2+'_'+rightSpos[i]
@@ -41,7 +42,7 @@ def mapExon(x):
                 tmprightSpos=int(rightSpos[i])
                 tmpDiff=abs(np.array(tmpExonEdict)-tmprightSpos)
                 rightSpos[i]=tmpExonEdict[np.where(np.array(tmpDiff)==min(tmpDiff))[0][0]]
-                rightSseq[i]=genome.sequence({'chr':chr2,'start':rightSpos[i]+1,'stop':rightSpos[i]+2})
+                rightSseq[i]=genome.get_seq(chr2,rightSpos[i]+1,rightSpos[i]+2).seq
                 isAdj.append('rightS')
             rightEposKey=chr1+'_'+rightEpos[i]
             if ExonSdict.__contains__(rightEposKey):
@@ -49,7 +50,7 @@ def mapExon(x):
                 tmprightEpos=int(rightEpos[i])
                 tmpDiff=abs(np.array(tmpExonSdict)-tmprightEpos)
                 rightEpos[i]=tmpExonSdict[np.where(np.array(tmpDiff)==min(tmpDiff))[0][0]]
-                rightEseq[i]=genome.sequence({'chr':chr1,'start':rightEpos[i]-2,'stop':rightEpos[i]-1})
+                rightEseq[i]=genome.get_seq(chr1,rightEpos[i]-2,rightEpos[i]-1).seq
                 isAdj.append('rightE')
     else:
         for i in range(len(leftSpos)):
@@ -59,7 +60,7 @@ def mapExon(x):
                 tmpleftSpos=int(leftSpos[i])
                 tmpDiff=abs(np.array(tmpExonEdict)-tmpleftSpos)
                 leftSpos[i]=tmpExonEdict[np.where(np.array(tmpDiff)==min(tmpDiff))[0][0]]
-                leftSseq[i]=genome.sequence({'chr':chr1,'start':leftSpos[i]+1,'stop':leftSpos[i]+2})
+                leftSseq[i]=genome.get_seq(chr1,leftSpos[i]+1,leftSpos[i]+2).seq
                 isAdj.append('leftS')
             leftEposKey=chr2+'_'+leftEpos[i]
             if ExonEdict.__contains__(leftEposKey):
@@ -67,7 +68,7 @@ def mapExon(x):
                 tmpleftEpos=int(leftEpos[i])
                 tmpDiff=abs(np.array(tmpExonEdict)-tmpleftEpos)
                 leftEpos[i]=tmpExonEdict[np.where(np.array(tmpDiff)==min(tmpDiff))[0][0]]
-                leftEseq[i]=genome.sequence({'chr':chr2,'start':leftEpos[i]+1,'stop':leftEpos[i]+2,'strand':'-'})
+                leftEseq[i]=genome.get_seq(chr2,leftEpos[i]+1,leftEpos[i]+2).reverse.complement.seq
                 isAdj.append('leftE')
         for i in range(len(rightSpos)):
             rightSposKey=chr2+'_'+rightSpos[i]
@@ -76,7 +77,7 @@ def mapExon(x):
                 tmprightSpos=int(rightSpos[i])
                 tmpDiff=abs(np.array(tmpExonSdict)-tmprightSpos)
                 rightSpos[i]=tmpExonSdict[np.where(np.array(tmpDiff)==min(tmpDiff))[0][0]]
-                rightSseq[i]=genome.sequence({'chr':chr2,'start':rightSpos[i]-2,'stop':rightSpos[i]-1,'strand':'-'})
+                rightSseq[i]=genome.get_seq(chr2,rightSpos[i]-2,rightSpos[i]-1).reverse.complement.seq
                 isAdj.append('rightS')
             rightEposKey=chr1+'_'+rightEpos[i]
             if ExonSdict.__contains__(rightEposKey):
@@ -84,7 +85,7 @@ def mapExon(x):
                 tmprightEpos=int(rightEpos[i])
                 tmpDiff=abs(np.array(tmpExonSdict)-tmprightEpos)
                 rightEpos[i]=tmpExonSdict[np.where(np.array(tmpDiff)==min(tmpDiff))[0][0]]
-                rightEseq[i]=genome.sequence({'chr':chr1,'start':rightEpos[i]-2,'stop':rightEpos[i]-1})
+                rightEseq[i]=genome.get_seq(chr1,rightEpos[i]-2,rightEpos[i]-1).seq
                 isAdj.append('rightE')
     x['leftSpos']=','.join(map(str,leftSpos))
     x['leftEpos']=','.join(map(str,leftEpos))
@@ -161,15 +162,15 @@ def adjustBS(tmp,type='type1'):
                 pos_start=tmpPBothDF_potentail['start'].iloc[0]
                 pos_end=tmpPBothDF_potentail['end'].iloc[0]
     if strand:
-        seq_start=genome.sequence({'chr': chr1, 'start':pos_start+1, 'stop':pos_start+2}).upper()
-        seq_end=genome.sequence({'chr': chr2, 'start':pos_end-2, 'stop':pos_end-1}).upper()
+        seq_start=genome.get_seq(chr1, pos_start+1, pos_start+2).seq.upper()
+        seq_end=genome.get_seq(chr2, pos_end-2, pos_end-1).seq.upper()
     else:
         if type == 'type1':
-            seq_start=genome.sequence({'chr': chr1, 'start':pos_start+1, 'stop':pos_start+2}).upper()
-            seq_end=genome.sequence({'chr': chr2, 'start':pos_end+1, 'stop':pos_end+2,'strand':'-'}).upper()
+            seq_start=genome.get_seq(chr1, pos_start+1, pos_start+2).seq.upper()
+            seq_end=genome.get_seq(chr2, pos_end+1, pos_end+2).reverse.complement.seq.upper()
         else:
-            seq_start=genome.sequence({'chr': chr1, 'start':pos_start-2, 'stop':pos_start-1,'strand':'-'}).upper()
-            seq_end=genome.sequence({'chr': chr2, 'start':pos_end-2, 'stop':pos_end-1}).upper()
+            seq_start=genome.get_seq(chr1, pos_start-2, pos_start-1).reverse.complement.seq.upper()
+            seq_end=genome.get_seq(chr2, pos_end-2, pos_end-1).seq.upper()
     if type == 'type1':
         return('\t'.join([tmp['ID'],chr1,chr2,str(pos_start),str(pos_end),seq_start,seq_end]))
     else:
@@ -178,7 +179,7 @@ def adjustBS(tmp,type='type1'):
 
 def filterBS_fusion2(genomeFile,gtfFile,outPrefix):
     global genome,ExonSdict,ExonEdict
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     BSFile=outPrefix+"BS_Fusion2.txt"
     BS_Fusion2=pd.read_csv(BSFile,names=['ID','leftSchr','leftEchr','leftSpos','leftEpos','leftSseq','leftEseq',
     'rightSchr','rightEchr','rightSpos','rightEpos','rightSseq','rightEseq','strand'],sep='\t',dtype=object)

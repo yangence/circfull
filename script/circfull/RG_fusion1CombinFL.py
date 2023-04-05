@@ -1,4 +1,6 @@
-import pandas as pd,sys,pyfasta,sys,os,pysam
+import pandas as pd,sys,os,pysam
+from pyfaidx import Fasta
+
 
 
 def getSeq(chr,exonS,exonE,strand):
@@ -6,7 +8,7 @@ def getSeq(chr,exonS,exonE,strand):
     exonEnd=[int(i) for i in exonE.split(',')]
     seq=''
     for i in range(len(exonStart)):
-        seq+=genome.sequence({'chr': chr, 'start':exonStart[i], 'stop':exonEnd[i]})
+        seq+=genome.get_seq(chr, exonStart[i], exonEnd[i]).seq
     if strand=='-':
         seq=seq.upper()[::-1].replace('A','t').replace('T','a').replace('C','g').replace('G','c').upper()
     return(seq)
@@ -118,7 +120,7 @@ def getGene(chr,start,end,strand):
 def fusion1CombinFL(options):
     global genome, tabixfile
     genomeFile=options[0]
-    genome=pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     outPrefix=options[1]
     foutFa=open(outPrefix+'fusionSeq.fa','w')
     gtfFile=options[2]

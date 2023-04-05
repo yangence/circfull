@@ -1,4 +1,5 @@
-import pandas as pd, numpy as np,pyfasta,sys,os
+import pandas as pd, numpy as np,sys,os
+from pyfaidx import Fasta
 import intervals as I # Note: use "pip install python-intervals" to install not intervals or pyinterval
 from multiprocessing import Pool
 hangLen=300
@@ -33,14 +34,14 @@ def getNewFL(i):
         each1['reference_start'],each1['reference_end'],each1['exon_start'],each1['exon_end'],each1['exon_length']=outExon(newExon)
         each1['query_start']=min(each1['query_start'],each2['query_start'])
         each1['query_end']=max(each1['query_end'],each2['query_end'])
-        each1['leftSeq']=genome.sequence({'chr': each1['chr'], 'start':each1['reference_start']-1, 'stop':each1['reference_start']}).upper()
-        each1['rightSeq']=genome.sequence({'chr': each1['chr'], 'start':each1['reference_end']+1, 'stop':each1['reference_end']+2}).upper()
+        each1['leftSeq']=genome.get_seq(each1['chr'], each1['reference_start']-1, each1['reference_start']).seq.upper()
+        each1['rightSeq']=genome.get_seq(each1['chr'], each1['reference_end']+1, each1['reference_end']+2).seq.upper()
         return(each1.to_list())
     return(list(np.array([each1.to_list(),each2.to_list()]).ravel()))
 
 def adjExplainNormal(genomeFile,outPrefix,thread,isSecond=False):
     global genome,FLdf_2, targetID_dict
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     FLdf=pd.read_csv(outPrefix+"explainFL_Normal.txt",sep='\t')
     FLdf=FLdf.sort_values(by=["ID","query_start"],ascending=True)
     FLdf_counts=FLdf['ID'].value_counts()

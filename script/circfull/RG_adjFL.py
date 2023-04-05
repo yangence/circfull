@@ -1,4 +1,5 @@
-import os, sys, pyfasta, pysam, pandas as pd, numpy as np
+import os, sys, pysam, pandas as pd, numpy as np
+from pyfaidx import Fasta
 from multiprocessing import Pool
 errorLen=14 # FSJ is better than BSJ
 errorLen2=80
@@ -109,8 +110,8 @@ def mapExon(i):
     adjE[-1]=x['end']
     x['len']=sum([adjE[i]-adjS[i]+1 for i in range(num)])
     for i in range(num):
-        seqS.append(genome.sequence({'chr': chr, 'start':adjS[i]-2, 'stop':adjS[i]-1}).upper())
-        seqE.append(genome.sequence({'chr': chr, 'start':adjE[i]+1, 'stop':adjE[i]+2}).upper())
+        seqS.append(genome.get_seq(chr, adjS[i]-2, adjS[i]-1).seq.upper())
+        seqE.append(genome.get_seq(chr, adjE[i]+1, adjE[i]+2).seq.upper())
         adjS[i]=str(adjS[i])
         adjE[i]=str(adjE[i])
     x['exon_start']=','.join(adjS)
@@ -166,8 +167,8 @@ def adjExon(i):
         xSeqS=[]
         xSeqE=[]
         for i in range(exonNum):
-            xSeqS.append(genome.sequence({'chr': chr, 'start':xExonStart[i]-2, 'stop':xExonStart[i]-1}).upper())
-            xSeqE.append(genome.sequence({'chr': chr, 'start':xExonEnd[i]+1, 'stop':xExonEnd[i]+2}).upper())
+            xSeqS.append(genome.get_seq(chr, xExonStart[i]-2, xExonStart[i]-1).seq.upper())
+            xSeqE.append(genome.get_seq(chr, xExonEnd[i]+1, xExonEnd[i]+2).seq.upper())
         x['len']=sum([xExonEnd[i]-xExonStart[i]+1 for i in range(len(xExonStart))])
         xExonStart=[str(i) for i in xExonStart]
         xExonEnd=[str(i) for i in xExonEnd]
@@ -184,7 +185,7 @@ def adjFL(options):
     gtfFile=options[1]
     outPrefix=options[2]
     thread=int(options[3])
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     consFLraw=pd.read_csv(outPrefix+'constructFL_Normal.txt',sep='\t',dtype={'exon_start':str,'exon_end':str})
     isSecond=False
     if len(options)>4:

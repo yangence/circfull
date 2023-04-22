@@ -1,4 +1,5 @@
-import pandas as pd, numpy as np,pyfasta,sys
+import pandas as pd, numpy as np,sys
+
 
 def estimateStrand(x):
     leftSeq=x['exon_leftSeq'].split(',')

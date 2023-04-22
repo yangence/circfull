@@ -28,7 +28,9 @@ def fastq2fa(fq,fa,outPrefix):
         line1=fin.readline()
 
 def tideHunter(fa,th,thread):
-    os.system('TideHunter -f 2 -c 1.5 -p 30 -l -t %i %s>%s' % (thread,fa,th))
+    error_code = os.system('TideHunter -f 2 -c 1.5 -p 30 -l -t %i %s>%s' % (thread,fa,th))
+    if error_code != 0:
+       plog('ERROR: tideHunter finished with error')
 
 def read2read(outPrefix,thread):
     os.system('minimap2 -x  ava-ont -t %i %s %s >%s 2>/dev/null' % (thread,outPrefix+'rawseq.fa',outPrefix+'rawseq.fa',outPrefix+'raw2raw.paf'))

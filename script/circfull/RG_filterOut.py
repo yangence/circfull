@@ -1,9 +1,10 @@
-import pysam,pandas as pd,sys,os,numpy as np,pyfasta,mappy as mp
+import pysam,pandas as pd,sys,os,numpy as np,mappy as mp
 from interval import Interval
 from progressbar import *
 from multiprocessing import Pool
 from .RG_circFL_output import getSize,FL2bed
 from .RG_detectBS import getReadInfo
+from pyfaidx import Fasta
 filterTh=0.1
 BSfilterTh=0.5
 FSfilterTh=0.5
@@ -16,7 +17,7 @@ def getRef(isoID):
     end=[int(i) for i in end.split(',')]
     seq=''
     for i in range(len(start)):
-        seq+=genome.sequence({'chr':chr,'start':start[i],'stop':end[i]}).upper()
+        seq+=genome.get_seq(chr,start[i],end[i]).seq.upper()
     return(seq)
 def ref_pos2Type(eachMap):
     typeList=[]
@@ -210,7 +211,7 @@ def filterOut(readPrefix,outPrefix,fastqFile,genomeFile,thread=1,rmskFile=False)
     global bam,FL_noDup,dict_ID2type,RG_tmp_outPrefix,bamFile,genome,readLen,readDict
     fastq=open(fastqFile)
     
-    genome=pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     bamFile=readPrefix+'test.minimap2.bam'
     RG_tmp_outPrefix=outPrefix+'tmp/'
     FL_ID2type=pd.read_csv(readPrefix+'explainFL_ID2Type.txt',sep='\t')

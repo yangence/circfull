@@ -1,4 +1,5 @@
-import sys, os, pysam, pyfasta
+import sys, os, pysam
+from pyfaidx import Fasta
 
 def getReadInfo(read):
     rS=read.reference_start
@@ -35,7 +36,7 @@ def getReadInfo(read):
         strand="-"
     return([read.query_name,read.reference_name,rS,rE,qS,qE,','.join([str(i) for i in exonS]),','.join([str(i) for i in exonE]),exonLen,strand])
 def explainFL(genomeFile,outPrefix,sam):
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     samfile=pysam.AlignmentFile(sam,"r")
     fout=open(outPrefix+'explainFL.txt','w')
     fout_nop=open(outPrefix+'explainFL_noprimary.txt','w')
@@ -45,8 +46,8 @@ def explainFL(genomeFile,outPrefix,sam):
         if len(read.cigar) == 0:
             continue
         readInfo=getReadInfo(read)
-        leftSeq=genome.sequence({'chr': readInfo[1], 'start':readInfo[2]-1, 'stop':readInfo[2]}).upper()
-        rightSeq=genome.sequence({'chr': readInfo[1], 'start':readInfo[3]+1 , 'stop':readInfo[3]+2}).upper()
+        leftSeq=genome.get_seq(readInfo[1], readInfo[2]-1, readInfo[2]).seq.upper()
+        rightSeq=genome.get_seq(readInfo[1], readInfo[3]+1 , readInfo[3]+2).seq.upper()
         readInfo.append(leftSeq)
         readInfo.append(rightSeq)
         if read.flag & 256 >0:

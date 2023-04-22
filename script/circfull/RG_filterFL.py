@@ -1,8 +1,9 @@
-import numpy as np,pandas as pd,sys,pyfasta,os,pysam
+import numpy as np,pandas as pd,sys,os,pysam
 from interval import Interval # please 'pip uninstall pyinterval' and install this package by 'pip install interval'
 from multiprocessing import Pool
 from progressbar import *
 import mappy as mp
+from pyfaidx import Fasta
 
 
 # F1: fusion in different chromosome # F2: fusion in same chromosome
@@ -16,7 +17,7 @@ def getSeq(each):
     chr=each['chr']
     seq=''
     for i in range(len(exonStart)):
-        seq+=genome.sequence({'chr': chr, 'start':exonStart[i], 'stop':exonEnd[i]})
+        seq+=genome.get_seq(chr, exonStart[i], exonEnd[i]).seq
     return(seq)
 
 def calRead(read_list,refLen):
@@ -267,7 +268,7 @@ def filterFL(genomeFile,outPrefix,fastqFile,thread):
         thread=20
     global outPrefixTmp, genome,passID,explainFL_pass1,fq_dict
     outPrefixTmp=outPrefix+'tmp/'
-    genome=pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     oldFq=open(fastqFile)
     fileName=outPrefix+'explainFL.txt'
     

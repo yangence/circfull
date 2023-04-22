@@ -17,19 +17,38 @@ We recommand replace adapters.py in porechop directory with circfull/scripts/bin
 
 
 ## Installation
-Install latest release from pip
+## Option 1: Install latest release from pip
+This didn't work for me because of the conda samtools bug https://github.com/merenlab/anvio/issues/1479
 ```
 pip install circfull
 ```
 
-Install latest release from source codes
+## Option 2: Install latest release from source codes
 ```
 git clone https://github.com/yangence/circfull.git
 cd circfull/script
 pip install -r requirements.txt
 python setup.py install
 ```
-If pip installed pyfasta package goes wrong, try conda install pyfasta 
+
+## Option 3: conda install all dependency
+```
+conda create -n circfull --file environment.yaml
+cd script/
+python setup.py install
+
+# to run you need to also specify path to TideHunter(which is a pain in the aXX to compile v1.5.4)
+export PATH="script/bin/TRF/:$PATH"
+export PATH="script/bin/TH/:$PATH"
+# these people needs to be executable too
+chmod +x script/bin/TH/TideHunter 
+chmod +x script/bin/TRF/trf
+
+# also the samtools in conda still doesn't work,
+# so I had to use samtools from my lab's server
+```
+
+
 
 ## Required files:
 

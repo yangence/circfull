@@ -1,5 +1,6 @@
-import pandas as pd, numpy as np,pyfasta, sys,os,warnings
+import pandas as pd, numpy as np, sys,os,warnings
 from multiprocessing import Pool
+from pyfaidx import Fasta
 warnings.filterwarnings("ignore")
 errorLen=40
 
@@ -73,8 +74,8 @@ def mapExon(x):
             adjS.append(mSlist[mIdx])
             adjE.append(mElist[mIdx])
     for i in range(num):
-        seqS.append(genome.sequence({'chr': chr, 'start':adjS[i]-2, 'stop':adjS[i]-1}).upper())
-        seqE.append(genome.sequence({'chr': chr, 'start':adjE[i]+1, 'stop':adjE[i]+2}).upper())
+        seqS.append(genome.get_seq(chr, adjS[i]-2, adjS[i]-1).seq.upper())
+        seqE.append(genome.get_seq(chr, adjE[i]+1, adjE[i]+2).seq.upper())
         adjS[i]=str(adjS[i])
         adjE[i]=str(adjE[i])
     '''
@@ -203,14 +204,14 @@ def adjustBS(i):
             else:
                 pos_start=tmpPBothDF_potentail['start'].iloc[0]
                 pos_end=tmpPBothDF_potentail['end'].iloc[0]
-    seq_start=genome.sequence({'chr': chr, 'start':pos_start-2, 'stop':pos_start-1}).upper()
-    seq_end=genome.sequence({'chr': chr, 'start':pos_end+1, 'stop':pos_end+2}).upper()
+    seq_start=genome.get_seq(chr, pos_start-2, pos_start-1).seq.upper()
+    seq_end=genome.get_seq(chr, pos_end+1, pos_end+2).seq.upper()
     return('\t'.join([tmp['ID'],chr,str(pos_start),str(pos_end),seq_start,seq_end,str(adj_start),str(adj_end)]))
 
 def filterBS(options):
     global genome,ExonSdict,ExonEdict,strandDict,BS_Normal,isSecond,gtf_exon,setMotif1,setMotif2,setMotif3,strandFile
     genomeFile=options[0]
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     gtfFile=options[1]
     outPrefix=options[2]
     thread=options[3]

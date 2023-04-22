@@ -1,5 +1,6 @@
-import pandas as pd, numpy as np, pyfasta,sys,os
+import pandas as pd, numpy as np,sys,os
 from multiprocessing import Pool
+from pyfaidx import Fasta
 
 
 def getSeq(i):
@@ -9,7 +10,7 @@ def getSeq(i):
     chr=tmp['chr']
     seq=''
     for i in range(len(exonStart)):
-        seq+=genome.sequence({'chr': chr, 'start':exonStart[i], 'stop':exonEnd[i]})
+        seq+=genome.get_seq(chr, exonStart[i], exonEnd[i]).seq
     return([tmp['ID'],seq])
 
 def tidehunter(faFile,thFile,thread):
@@ -19,7 +20,7 @@ def tidehunter(faFile,thFile,thread):
 
 def circSeq(genomeFile,outPrefix,thread):
     global genome,FL
-    genome=pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
     FL=pd.read_csv(outPrefix+'constructFL_Normal_adj.txt',sep='\t',dtype={'exon_start':str,'exon_end':str})
     fout=open(outPrefix+'circSeq.fa','w')
     pool=Pool(processes=thread)

@@ -6,6 +6,13 @@ rawFq=M1.example.fq # included in example directory
 gtfFile=gencode.v19.annotation.sort.gtf.gz # sorted and tabix indexed
 genome=hg19.fa
 ```
+
+### let the software find TideHunter and Tandem repeat finder
+```
+export PATH="script/bin/TRF/:$PATH"
+export PATH="script/bin/TH/:$PATH"
+```
+
 ### chop and split raw reads to get clean reads
 ```
 cleanFq=M1.clean.fq
@@ -43,8 +50,16 @@ circfull  cRG -t $thread -g $genome -a $gtfFile -f $outDir -o  $outDir # output 
 
 ### merge results and filter out low-quality circRNA
 ```
-rmsk=rmsk.bed.gz # optional
+rmsk=rmsk.bed.gz # unclear where this file comes from, waiting for author to comment
 circfull  mRG  -m $rmsk -t $thread -g $genome -f $cleanFq -r $outDir -c  $outDir -s $outDir -o  $outDir # output circFL_Normal_pass.txt in $outDir/mRG
+
+```
+
+```
+#depends on samtools
+module load samtools/1.19
+circfull  mRG  -t $thread -g $genome -f $cleanFq -r $outDir -c  $outDir -s $outDir -o  $outDir # output 
+module unload samtools
 ```
 
 ## annotate full-length circRNA
@@ -70,5 +85,8 @@ circfull geneExp -f $cleanFq -r $gene_ref -o $outDir -t $thread # output geneCou
 
 ## calling variants in full-length circRNA
 ```
+# this particular step is dependent on an older samtools. It wasn't explicit in the original package
+module load samtools/1.6 
 circfull var -f $cleanFq -g $genome -t $thread -r $outDir -o $outDir
+module unload samtools/1.6
 ```

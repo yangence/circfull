@@ -1,4 +1,6 @@
-import pandas as pd,pyfasta,os,pysam,time,numpy as np,sys
+import pandas as pd,os,pysam,time,numpy as np,sys
+from pyfaidx import Fasta
+
 from multiprocessing import Pool
 def getVCFLine(vcf):
     fin=open(vcf)
@@ -69,7 +71,16 @@ def getEachVCF(sam,ref):
         fout.write(eachMap)
         fout.close()
         #t1=time.time()
-        os.system('/home/lzl/miniconda3/bin/samtools mpileup -v -u -B -I -Q 1 -t AD -f '+ref +' '+tmpSam+' >'+tmpSam+'.vcf 2>/dev/null')
+        # sort sam file
+        cmd = f'samtools sort {tmpSam} -o {tmpSam}.sorted'
+        error_code = os.system(cmd)
+        if error_code != 0:
+            print(f'Error with samtools sort: {cmd}')
+
+        cmd = 'samtools mpileup -v -u -B -I -Q 1 -t AD -f '+ref +' '+tmpSam+'.sorted'+' >'+tmpSam+'.vcf 2>/dev/null'
+        error_code = os.system(cmd)
+        if error_code != 0:
+            print(f'Error with samtools pileup: {cmd}')
         #t2=time.time()
         #print('t1 time:%f' % (t2-t1))
         arrAD=getVCFLine(tmpSam+'.vcf')
@@ -79,8 +90,8 @@ def getEachVCF(sam,ref):
             baseDict[arrAD[j]][j]+=1
         #t4=time.time()
         #print('t3 time:%f' % (t4-t3))
-    os.remove(tmpSam)
-    os.remove(tmpSam+'.vcf')
+    # os.remove(tmpSam)
+    # os.remove(tmpSam+'.vcf')
     return(baseDict)
 
 def AD2ED(baseDict,ref):
@@ -177,20 +188,24 @@ def getEd(circKey):
     foFa.close()
     tmpSAM=outPrefixTmp+currentID+".sam"
     cmd1="minimap2 -ax splice -N 1 -k14 "+outPrefixTmp+"seq2_"+currentID+".fa "+outPrefixTmp+"seq1_"+currentID+".fastq>" +tmpSAM+" 2>/dev/null"
-    os.system(cmd1)
+    error_code = os.system(cmd1)
+    if error_code != 0:
+        print('Error with minimap2')
     ref=outPrefixTmp+"seq2_"+currentID+".fa"
+    
     tmpAD=getEachVCF(tmpSAM,ref)
+
     tmpED=AD2ED(tmpAD.copy(),ref)
     passED=tmpED.loc[tmpED.apply(lambda x:getFreq(x[2],x[3]),axis=1),:].copy()
     edDF=formED(passED.copy(),eachChr,eachLeft,eachLen,circKey)
-    if os.path.exists(outPrefixTmp+"seq1_"+currentID+".fastq"):
-        os.remove(outPrefixTmp+"seq1_"+currentID+".fastq")
-    if os.path.exists(outPrefixTmp+"seq2_"+currentID+".fa"):    
-        os.remove(outPrefixTmp+"seq2_"+currentID+".fa")
-    if os.path.exists(outPrefixTmp+currentID+".sam"):    
-        os.remove(outPrefixTmp+currentID+".sam")
-    if os.path.exists(outPrefixTmp+"seq2_"+currentID+".fa.fai"):
-        os.remove(outPrefixTmp+"seq2_"+currentID+".fa.fai")
+    # if os.path.exists(outPrefixTmp+"seq1_"+currentID+".fastq"):
+    #     os.remove(outPrefixTmp+"seq1_"+currentID+".fastq")
+    # if os.path.exists(outPrefixTmp+"seq2_"+currentID+".fa"):    
+    #     os.remove(outPrefixTmp+"seq2_"+currentID+".fa")
+    # if os.path.exists(outPrefixTmp+currentID+".sam"):    
+    #     os.remove(outPrefixTmp+currentID+".sam")
+    # if os.path.exists(outPrefixTmp+"seq2_"+currentID+".fa.fai"):
+    #     os.remove(outPrefixTmp+"seq2_"+currentID+".fa.fai")
     if edDF.shape[0]==0:
         return([])
     edList=np.array(edDF.copy())
@@ -203,7 +218,7 @@ def getEd(circKey):
 def getVar(genomeFile,RG_out,outPrefix,fastqFile,thread):
     global outPrefixTmp,FLdf,fastqList,faPos,faOutput
     outPrefixTmp=outPrefix+'tmp/'
-    genome = pyfasta.Fasta(genomeFile)
+    genome = Fasta(genomeFile)
 
 
     FLdf=pd.read_csv(RG_out+'result_Normal.txt',sep='\t')
@@ -239,7 +254,7 @@ def getVar(genomeFile,RG_out,outPrefix,fastqFile,thread):
         chr=each['chr']
         exonS=[int(j) for j in each['exon_start'].split(',')]
         exonE=[int(j) for j in each['exon_end'].split(',')]
-        maxFa=genome.sequence({'chr': chr, 'start':exonS[0]+1-hangLen, 'stop':exonE[-1]+hangLen})
+        maxFa=genome.get_seq(chr, exonS[0]+1-hangLen, exonE[-1]+hangLen).seq
         faBS=''
         for j in range(2):
             faBS+=maxFa

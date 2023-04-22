@@ -110,7 +110,7 @@ def getRef(isoID):
     end=[int(i) for i in end.split(',')]
     seq=''
     for i in range(len(start)):
-        seq+=genome.sequence({'chr':chr,'start':start[i],'stop':end[i]}).upper()
+        seq+=genome.get_seq(chr,start[i],end[i]).seq.upper()
     return(seq)
 def ref_pos2Type(eachMap):
     typeList=[]

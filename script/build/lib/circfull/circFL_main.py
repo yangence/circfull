@@ -25,9 +25,6 @@ Command:
     geneExp        Quantify gene expression to evaluate linear RNA residual
     var            Calling variants in circRNA.
     partial        Count partial circRNA.
-    intron	   Refine intronic lariats and self-ligated circRNA.
-    FL2BED         Transform circFL format to BED format.
-    filter         Quality evaluation of circFL result.
 '''
 
 def main():
@@ -66,15 +63,6 @@ def main():
     elif sys.argv[1] == 'partial':
         import circfull.partial as partial
         partial.partial(docopt(partial.__doc__, version=__version__))
-    elif sys.argv[1] == 'intron':
-        import circfull.intron as intron
-        intron.intron(docopt(intron.__doc__, version=__version__))
-    elif sys.argv[1] == 'FL2BED':
-        import circfull.FL2bed as FL2BED
-        FL2BED.FL2BED(docopt(FL2BED.__doc__, version=__version__))
-    elif sys.argv[1] == 'filter':
-        import circfull.filter_circFL as filter
-        filter.filter(docopt(filter.__doc__, version=__version__))
     else:
         sys.exit(helpInfo)
 

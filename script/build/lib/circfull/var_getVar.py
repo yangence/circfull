@@ -69,7 +69,7 @@ def getEachVCF(sam,ref):
         fout.write(eachMap)
         fout.close()
         #t1=time.time()
-        os.system('samtools mpileup -v -u -B -I -Q 1 -t AD -f '+ref +' '+tmpSam+' >'+tmpSam+'.vcf 2>/dev/null')
+        os.system('/home/lzl/miniconda3/bin/samtools mpileup -v -u -B -I -Q 1 -t AD -f '+ref +' '+tmpSam+' >'+tmpSam+'.vcf 2>/dev/null')
         #t2=time.time()
         #print('t1 time:%f' % (t2-t1))
         arrAD=getVCFLine(tmpSam+'.vcf')

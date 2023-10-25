@@ -1,5 +1,5 @@
 '''
-Usage: circfull mRG -f fastq -g genome [-m rmsk] [-r RG] [-c cRG] [-s sRG] [-t threads] [-o output] [-k]
+Usage: circfull mRG -f fastq -g genome [-m rmsk] [-r RG] [-c cRG] [-s sRG] [-t threads] [-o output]
 
 Options:
     -h --help                   Show help message.
@@ -12,7 +12,6 @@ Options:
     -s sRG                      sRG directory [default: circFL_out].
     -t threads                  Number of threads [default: 20].
     -o output                   Output dir [default: circFL_out].
-    -k                          Skip calcuation of splicing ratio
 '''
 
 from .genericFun import *
@@ -20,13 +19,10 @@ from .mRG_merge import merge
 from .RG_filterOut import filterOut
 def mRG(options):
     rmskFile=False
-    skipSplice=False
     if options['-m']:
         rmskFile=options['-m']
         plog('Check rmsk file')
         fileCheck(rmskFile)
-    if options['-k']:
-        skipSplice=True
     outDir=options['-o']
     RG=options['-r']
     cRG=options['-c']
@@ -109,6 +105,6 @@ def mRG(options):
         sam2bam(RG+'test.minimap2.sam',RG+'test.minimap2.bam')
     
     plog('Filter circFL results: filterOut')
-    filterOut(RG,outPrefix+'mRG/',fastq,genome,thread,rmskFile,skipSplice=skipSplice)
+    filterOut(RG,outPrefix+'mRG/',fastq,genome,thread,rmskFile)
     
     plog('All done!!!')

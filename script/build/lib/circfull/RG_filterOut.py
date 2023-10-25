@@ -206,7 +206,7 @@ def calReadSplice(i):
     os.system('rm %s' % tmpFileE)
     return([count_s,count_i])
 
-def filterOut(readPrefix,outPrefix,fastqFile,genomeFile,thread=1,rmskFile=False,skipSplice=False):
+def filterOut(readPrefix,outPrefix,fastqFile,genomeFile,thread=1,rmskFile=False):
     global bam,FL_noDup,dict_ID2type,RG_tmp_outPrefix,bamFile,genome,readLen,readDict
     fastq=open(fastqFile)
     

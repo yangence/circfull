@@ -45,8 +45,6 @@ def explainFL(genomeFile,outPrefix,sam):
         if len(read.cigar) == 0:
             continue
         readInfo=getReadInfo(read)
-        if 'chr' not in readInfo[1]:
-            continue
         leftSeq=genome.sequence({'chr': readInfo[1], 'start':readInfo[2]-1, 'stop':readInfo[2]}).upper()
         rightSeq=genome.sequence({'chr': readInfo[1], 'start':readInfo[3]+1 , 'stop':readInfo[3]+2}).upper()
         readInfo.append(leftSeq)

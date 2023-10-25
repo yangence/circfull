@@ -46,7 +46,6 @@ def geneCount(outPrefix):
     geneMap=pd.read_csv(outPrefix+'geneMap.paf',sep='\t',header=None,usecols=[0,5])
     geneMap.columns=['ID','anno']
     geneMap_filter=geneMap.drop_duplicates('ID').copy()
-    geneMap_filter.iloc[:,1]=geneMap_filter.iloc[:,1].map(str)
     geneMap_filter['geneID']=geneMap_filter.iloc[:,1].map(getGeneID)
     geneMap_filter['geneName']=geneMap_filter.iloc[:,1].map(geneName)
     geneCount=geneMap_filter['geneID'].value_counts()

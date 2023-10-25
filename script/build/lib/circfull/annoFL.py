@@ -133,12 +133,6 @@ def getCircType(tmp):
     canGene_full=[] # all in the gene with same sense
     canGene_part=[] # only a part in the gene with same sense
     canGene_anti=[] # antisense
-    start_type=''
-    end_type=''
-    circ_type=''
-    geneName=''
-    if tmp['chr'] not in tabixfile.contigs:
-        return(start_type,end_type,circ_type,geneName)
     for gtf in tabixfile.fetch(tmp['chr'], tmp['start']-1, tmp['end']-1,parser=pysam.asGTF()):
         if gtf.feature=='gene':
             if gtf.strand==tmp['strand']:
@@ -146,14 +140,12 @@ def getCircType(tmp):
                     canGene_full.append(gtf.gene_id)
                 else:
                     canGene_part.append(gtf.gene_id)
-            elif tmp['strand']=='': # only used for unstranded RG results
-                if (gtf.start<=tmp['start']) and (gtf.end>=tmp['end']):
-                    canGene_full.append(gtf.gene_id)
-                else:
-                    canGene_part.append(gtf.gene_id)                
             else:
                 canGene_anti.append(gtf.gene_id)                
-    
+    start_type=''
+    end_type=''
+    circ_type=''
+    geneName=''
     if len(canGene_full)>0:
         circ_type='full'
         exon_score=-1
@@ -270,7 +262,7 @@ def getMinMax(canGene_part):
 
 def bed2df(bedFile,gtfFile):
     global tabixfile,gene2strand_dict,gene2trans_dict,gene2exon_dict,trans2exon_dict,trans2gene_dict,gene2status_dict,gene2class_dict,trans2class_dict
-    FL_bed=pd.read_csv(bedFile,sep='\t',header=None, keep_default_na=False)
+    FL_bed=pd.read_csv(bedFile,sep='\t',header=None)
     FL_bed.iloc[:,10]=FL_bed.iloc[:,10].map(str)
     FL_bed.iloc[:,11]=FL_bed.iloc[:,11].map(str)
     FL=pd.DataFrame(FL_bed.apply(lambda x: bed2FL(x),axis=1).tolist(),columns=['chr','start','end','isoID','strand','exon_start','exon_end','len'])
@@ -337,7 +329,6 @@ def bed2df(bedFile,gtfFile):
     
     BSJ_type_list=[]
     for i in range(FL.shape[0]):
-        BSJ_type=''
         circ_type=circ_type_list[i]
         start_type=start_type_list[i].split(',')
         end_type=end_type_list[i].split(',')

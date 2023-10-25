@@ -206,7 +206,14 @@ def calReadSplice(i):
     os.system('rm %s' % tmpFileE)
     return([count_s,count_i])
 
-def filterOut(readPrefix,outPrefix,fastqFile,genomeFile,thread=1,rmskFile=False,skipSplice=False):
+def getCircReads(df):
+    reads=[]
+    for i in df.readID:
+        reads.extend(i.split(','))
+    readdict=dict(zip(reads,[1]*len(reads)))
+    return(readdict)
+
+def file_filterOut(readPrefix,circFL_file,outPrefix,fastqFile,genomeFile,thread=1,rmskFile=False,skipSplice=False):
     global bam,FL_noDup,dict_ID2type,RG_tmp_outPrefix,bamFile,genome,readLen,readDict
     fastq=open(fastqFile)
     
@@ -216,22 +223,39 @@ def filterOut(readPrefix,outPrefix,fastqFile,genomeFile,thread=1,rmskFile=False,
     FL_ID2type=pd.read_csv(readPrefix+'explainFL_ID2Type.txt',sep='\t')
     dict_ID2type=dict(zip(FL_ID2type['ID'],FL_ID2type['type']))
     bam=pysam.AlignmentFile(bamFile,'r')
-    FL_noDup=pd.read_csv(outPrefix+'circFL_Normal.txt',sep='\t')
+    FL_noDup=pd.read_csv(circFL_file,sep='\t')
+
+    
     totalCount=FL_noDup.loc[:,['circID','readCount']].groupby('circID').agg('sum')
     readDict={}
     readLen={}
     line1=fastq.readline()
-    while True:
-        if line1:
-            line2=fastq.readline().strip()
-            line3=fastq.readline()
-            line4=fastq.readline()
-            ID=line1.strip().split()[0][1:]
-            readDict[ID]=line2
-            readLen[ID]=len(line2)
-            line1=fastq.readline()
-        else:
-            break
+    if skipSplice:
+        read_dict=getCircReads(FL_noDup)
+        while True:
+            if line1:
+                line2=fastq.readline().strip()
+                line3=fastq.readline()
+                line4=fastq.readline()
+                ID=line1.strip().split()[0][1:]
+                if read_dict.__contains__(ID):
+                    readDict[ID]=line2
+                    readLen[ID]=len(line2)
+                line1=fastq.readline()
+            else:
+                break
+    else:
+        while True:
+            if line1:
+                line2=fastq.readline().strip()
+                line3=fastq.readline()
+                line4=fastq.readline()
+                ID=line1.strip().split()[0][1:]
+                readDict[ID]=line2
+                readLen[ID]=len(line2)
+                line1=fastq.readline()
+            else:
+                break
     FL_fo=FL_noDup.loc[:,['circID','isoID','readCount']].copy()
     FL_fo['totalCount']=totalCount.loc[FL_noDup.circID,'readCount'].tolist()
     readSplice=[]

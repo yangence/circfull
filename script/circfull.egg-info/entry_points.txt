@@ -1,3 +1,0 @@
-[console_scripts]
-circfull = circfull.circFL_main:main
-porechop = bin.porechop:main

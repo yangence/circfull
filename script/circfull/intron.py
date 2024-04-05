@@ -457,6 +457,9 @@ def intron(options):
     plog("Prepare output files")          
     merge_reads2type=combineJudge(readsJudge_iso2intron)
     merge_reads2type_df=pd.DataFrame(merge_reads2type).T
+    if merge_reads2type_df.shape[1]==0:
+    	plog('No intron circRNA found!')
+    	return()
     merge_reads2type_df_dict=dict(zip(merge_reads2type_df.index,merge_reads2type_df.iloc[:,1]))    
     merge_reads2type_df_format=prepareFormat(merge_reads2type_df)
 

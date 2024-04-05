@@ -17,8 +17,8 @@ def bed2FL(x):
     chr=x[0]
     start=x[1]+1
     end=x[2]
-    exon_len=[int(i) for i in x[10].split(',')]
-    exon_start_pos=[int(i) for i in x[11].split(',')]
+    exon_len=[int(i) for i in x[10].rstrip(',').split(',')]
+    exon_start_pos=[int(i) for i in x[11].rstrip(',').split(',')]
     exon_start=[start+i for i in exon_start_pos]
     exon_end=[exon_start[i]+exon_len[i]-1 for i in range(len(exon_len))]
     exon_start=[str(i) for i in exon_start]
@@ -57,8 +57,8 @@ def comparePartExon2gene(geneExon,exon_start,exon_end):
             overlapIdx_end.append(1)
         else:
             overlapIdx_end.append(0)
-    start_type=start_type.split(',')
-    end_type=end_type.split(',')
+    start_type=start_type.rstrip(',').split(',')
+    end_type=end_type.rstrip(',').split(',')
     for i in range(num):
         if overlapIdx_start[i]==0:
             start_type[i]='intergenic'
@@ -127,8 +127,8 @@ def compareExon2gene(geneExon,exon_start,exon_end):
     return(start_pos_all,end_pos_all,match_score,in_start_match+in_end_match)  
 
 def getCircType(tmp):
-    exon_start=[int(i) for i in tmp['exon_start'].split(',')]
-    exon_end=[int(i) for i in tmp['exon_end'].split(',')]
+    exon_start=[int(i) for i in tmp['exon_start'].rstrip(',').split(',')]
+    exon_end=[int(i) for i in tmp['exon_end'].rstrip(',').split(',')]
 
     canGene_full=[] # all in the gene with same sense
     canGene_part=[] # only a part in the gene with same sense
@@ -219,8 +219,8 @@ def getCircType(tmp):
     return(start_type,end_type,circ_type,geneName)
 
 def combin2type(t1,t2):
-    t1=t1.split(',')
-    t2=t2.split(',')
+    t1=t1.rstrip(',').split(',')
+    t2=t2.rstrip(',').split(',')
     num=len(t1)
     tc=[]
     for i in range(num):
@@ -339,8 +339,8 @@ def bed2df(bedFile,gtfFile):
     for i in range(FL.shape[0]):
         BSJ_type=''
         circ_type=circ_type_list[i]
-        start_type=start_type_list[i].split(',')
-        end_type=end_type_list[i].split(',')
+        start_type=start_type_list[i].rstrip(',').split(',')
+        end_type=end_type_list[i].rstrip(',').split(',')
         if circ_type in ['intergenic','antisense','read through']:
             BSJ_type=circ_type
         elif circ_type=='part':
@@ -394,8 +394,8 @@ def bed2df(bedFile,gtfFile):
     for i in range(FL.shape[0]):
         FSJ_type=[]
         circ_type=circ_type_list[i]
-        start_type=start_type_list[i].split(',')
-        end_type=end_type_list[i].split(',')
+        start_type=start_type_list[i].rstrip(',').split(',')
+        end_type=end_type_list[i].rstrip(',').split(',')
         if circ_type in ['intergenic','antisense','read through']:       
             FSJ_type=circ_type
         else:

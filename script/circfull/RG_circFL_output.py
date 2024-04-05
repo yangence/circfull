@@ -10,12 +10,13 @@ def FL2bed(FL_noDup):
     FL_bed['itemRgb']=0
     exonNum=FL_noDup['exon_start'].map(lambda x: len(str(x).split(','))).tolist()
     FL_bed['blockCount ']=exonNum
-    exonSize=FL_noDup.apply(lambda x: getSize(x),axis=1).tolist()
+    exonSize=FL_noDup.apply(lambda x: getSize_checksize(x),axis=1).tolist()
     FL_bed['blockSizes']=exonSize
     startPos=FL_noDup.apply(lambda x: getStart(x),axis=1).tolist()
     FL_bed['blockStarts']=startPos
     FL_bed.loc[FL_bed['strand']=='U','strand']=''
-    return(FL_bed)
+    FL_bed_pass=FL_bed.iloc[[index for index, value in enumerate(exonSize) if value is not False],:].copy()
+    return(FL_bed_pass)
     
 def fus2toNormal(x):
     ID=x['ID']
@@ -47,6 +48,19 @@ def getSize(x):
     for i in range(len(start)):
         size.append(str(end[i]-start[i]+1))
     return(','.join(size))
+    
+def getSize_checksize(x):
+    start=[int(i) for i in str(x['exon_start']).split(',')]
+    end=[int(i) for i in str(x['exon_end']).split(',')]
+    size=[]
+    for i in range(len(start)):
+        eachsize=end[i]-start[i]+1
+        if eachsize<2:
+            return(False)
+        else:
+            size.append(str(eachsize))
+    return(','.join(size))
+    
 def getStart(x):
     start=[int(i) for i in str(x['exon_start']).split(',')]
     s0=x['start']

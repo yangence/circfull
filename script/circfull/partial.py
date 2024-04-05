@@ -18,20 +18,29 @@ from .RG_circFL_output import FL2bed
 def getTargetRead(explainFL_file):
     explainFL_in=open(explainFL_file)
     target_read=[]
+    read2pos={}
     each=explainFL_in.readline()
     while each:
+        each_arr=each.strip().split('\t')
         each_next=explainFL_in.readline()
         if not each_next:
             break
         else:
-            each_arr=each.strip().split('\t')
             each_next_arr=each_next.strip().split('\t')
             if each_arr[0]==each_next_arr[0] and each_arr[1]==each_next_arr[1]:
-                target_read.append(each_arr[0])
+                target_read.append(each_arr[0])                
             each=each_next
+            if each_arr[0] not in read2pos:
+                read2pos[each_arr[0]]=[[each_arr[1],int(each_arr[2]),int(each_arr[3])]]# additional code to record the orgional mapping position 03/16/24
+            else:
+                read2pos[each_arr[0]].append([each_arr[1],int(each_arr[2]),int(each_arr[3])])
+    if each_arr[0] not in read2pos: # the last one
+                read2pos[each_arr[0]]=[[each_arr[1],int(each_arr[2]),int(each_arr[3])]]# additional code to record the orgional mapping position 03/16/24
+    else:
+        read2pos[each_arr[0]].append([each_arr[1],int(each_arr[2]),int(each_arr[3])])
     explainFL_in.close()
     target_read=list(set(target_read))
-    return(target_read)
+    return(target_read,read2pos)
 
 def getTargetFastq(target_read,fastq_file,target_fastq):
     target_read_dict=dict(zip(target_read,[1]*len(target_read)))
@@ -172,7 +181,33 @@ def judgeJun(eachMap,targetPos):
         return(True)
     else:
         return(False)
-def countPartial(sam,circ_df,hangLen=5):
+        
+def judgeIsoOverlap(isoID,pos):
+    isoID_arr=isoID.split('|')
+    start1=int(isoID_arr[1].split(',')[0])
+    start2=int(pos[1])
+    end1=int(isoID_arr[2].split(',')[-1])
+    end2=int(pos[2])
+    if isoID_arr[0]==pos[0]:
+        if start1 > end2 or start2 > end1:
+            return False
+        return True
+    else:
+        return False
+
+def judgeIsoOverlap_list(isoID,pos_list):
+    n=len(pos_list)
+    if n<2:
+        return(False)
+    overlap_judge=[]
+    for i in range(n):
+        overlap_judge.append(judgeIsoOverlap(isoID,pos_list[i]))
+    if sum(overlap_judge)>=2:
+        return(True)
+    else:
+        return(False)
+    
+def countPartial(sam,circ_df,read2pos,hangLen=5):
     samfile=pysam.AlignmentFile(sam,"r")
     iso2reads_dict={}
     read2iso_dict={}
@@ -227,7 +262,11 @@ def countPartial(sam,circ_df,hangLen=5):
         if circ_df_read2iso.__contains__(i):
             continue
         else:
-            circ_df_read2iso[i]=read2iso_dict[i]
+            if i in read2pos:
+                read_refpos=read2pos[i] # additional code 03/16/2024
+                isoID=read2iso_dict[i] #
+                if judgeIsoOverlap_list(isoID,read_refpos): #
+                    circ_df_read2iso[i]=read2iso_dict[i]
     iso2read_circ_df={}
     for read,iso in circ_df_read2iso.items():
         if iso2read_circ_df.__contains__(iso):
@@ -274,7 +313,7 @@ def partial(options):
     circ_df=pd.read_csv(circ_file,sep='\t')
     circ_df=filterCircFL(circ_df)
     plog("Get target reads")
-    target_read=getTargetRead(explainFL_file)
+    target_read,read2pos=getTargetRead(explainFL_file)
     getTargetFastq(target_read,fastq,partial_tmp_outPrefix+'target_reads.fastq')
     plog("BED to Fasta file")
     circ_df_bed=FL2bed(circ_df)
@@ -287,7 +326,7 @@ def partial(options):
     plog("Align target reads")
     os.system("minimap2 -ax splice -ub -k14 -w 4 -t %d %s %s >%s" % (thread,twoFL_file,partial_tmp_outPrefix+'target_reads.fastq',sam))
     plog("Count partial reads")
-    new_df=countPartial(sam,circ_df)
+    new_df=countPartial(sam,circ_df,read2pos)
     new_df.to_csv(partial_outPrefix+'circFL_Normal.txt',sep='\t',index=None)
     plog('All done!!!')
     

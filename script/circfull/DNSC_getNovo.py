@@ -77,3 +77,4 @@ def getNovo(outDir,fastqFile,thread,isCluster):
         seqFout=open(outPrefix+'novoseq.fa','w')
         for i in range(thFile_new.shape[0]):
             seqFout.write('>'+thFile_new.iloc[i].name+'\n'+thFile_new.iloc[i]['consensus']+'\n')
+        seqFout.close()

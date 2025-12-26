@@ -1,5 +1,5 @@
 '''
-Usage: circfull partial -f fastq -g genome -c circ -j junc [-t threads] [-o output]
+Usage: circfull partial -f fastq -g genome -c circ -j junc [-l bed] [-t threads] [-o output]
 
 Options:
     -h --help                   Show help message.
@@ -7,14 +7,15 @@ Options:
     -f fastq                    circFL-seq fastq file.
     -g genome                   Fasta file of genome.
     -c circ                     circFL full-length file.
-    -j junc                     explainFL file.         
+    -j junc                     explainFL file.
+    -l bed                      A bed file containing circRNA from multiple samples used in partial analysis.         
     -t threads                  Number of threads [default: 20].
     -o output                   Output dir [default: circFL_out].
 '''
 from .genericFun import *
 import sys,time,pandas as pd,numpy as np,docopt,os,time,pysam
 from .RG_circFL_output import FL2bed
-
+    
 def getTargetRead(explainFL_file):
     explainFL_in=open(explainFL_file)
     target_read=[]
@@ -22,6 +23,9 @@ def getTargetRead(explainFL_file):
     each=explainFL_in.readline()
     while each:
         each_arr=each.strip().split('\t')
+        if each_arr[0]=='ID':
+            each=explainFL_in.readline()
+            continue
         each_next=explainFL_in.readline()
         if not each_next:
             break
@@ -289,11 +293,16 @@ def partial(options):
     explainFL_file=options['-j']
     fastq=options['-f']
     genome=options['-g']
+    if options['-l']:
+        target_isoID=options['-l']
+        plog('Check isoID file')
+        fileCheck(target_isoID)
+        target_isoID_bed=pd.read_csv(target_isoID,sep='\t',header=None)
     thread=int(options['-t'])
     outDir=options['-o']
     plog('Check circFL file')
     fileCheck(circ_file)
-    plog('Check circFL file')
+    plog('Check explainFL file')
     fileCheck(explainFL_file)
     plog('Check fastq file')
     checkFastq(fastq)
@@ -322,7 +331,7 @@ def partial(options):
     os.system("bedtools getfasta  -split -nameOnly -fi %s -bed %s -fo %s" % (genome,partial_outPrefix+'circFL_Normal.bed',faFile))
     fileCheck(faFile)
     twoFL_file=partial_tmp_outPrefix+'twoFL.fa'
-    fa2twofa(partial_tmp_outPrefix+'circFL_Normal.fa',twoFL_file)
+    fa2twofa(faFile,twoFL_file)
     plog("Align target reads")
     os.system("minimap2 -ax splice -ub -k14 -w 4 -t %d %s %s >%s" % (thread,twoFL_file,partial_tmp_outPrefix+'target_reads.fastq',sam))
     plog("Count partial reads")

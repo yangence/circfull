@@ -79,7 +79,15 @@ def mp_read2ref(tmp,type):
     currentID=tmp.index.tolist()[0]
     readSeq=fq_dict[currentID]
     for i in range(tmpNrow):
-        each=tmp.iloc[i,:]
+        #each=tmp.iloc[i,:]
+        try:
+            each = tmp.iloc[i, :]
+        except Exception as e:
+            print(f"Error accessing tmp.iloc[{i}, :]: {e}")
+            print(tmp)
+            print(tmp.shape)
+            return(type, -1)  # Return the type to signal the issu
+    
         ref_seq=getSeq(each)
         eachAlign=mp.Aligner(seq=ref_seq,k=10,n_threads=1,preset='map-ont')
         mapAll=eachAlign.map(readSeq)
@@ -166,6 +174,8 @@ def judgeFusion_same(tmp):
         r2=Interval(r2S,r2E,lower_closed=False)
         if r1.overlaps(r2):
             #return('NC',-1)
+            if len(set(tmpStrand))>1: # revised due to more 2D reads in R10 flow cells
+            	return('U',-1)
             return('N',-1) # revised for more sensitive
         type,rowID=mp_read2ref(tmp,'U')
         return(type,rowID)

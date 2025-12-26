@@ -50,7 +50,7 @@ def annotateNormal(options):
     FL_th=pd.read_csv(outPrefix+'circSeq.th',sep='\t',names=['ID','consN','readLen','start','end','consLen','copyNum','full','consensus'])
     FL_th['usage']=(FL_th.end-FL_th.start)/FL_th.readLen
     FL_th=FL_th.loc[FL_th.usage>0.5]
-    FL_th=FL_th.loc[FL_th.copyNum>1.2]
+    FL_th=FL_th.loc[FL_th.copyNum>2]
     FL.index=FL['ID']
     if len(list(set(FL.ID)-set(FL_th.ID)))==0:
         sys.exit('No circRNAs were detected!!!')

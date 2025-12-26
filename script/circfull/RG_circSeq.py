@@ -13,7 +13,7 @@ def getSeq(i):
     return([tmp['ID'],seq])
 
 def tidehunter(faFile,thFile,thread):
-    cmd="TideHunter -f 2 -c 1.2 -l -t %i %s >%s 2>/dev/null" % (thread,faFile,thFile)
+    cmd="TideHunter -f 2 -c 2 -l -t %i %s >%s 2>/dev/null" % (thread,faFile,thFile)
     os.system(cmd)
 
 

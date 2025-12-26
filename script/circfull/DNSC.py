@@ -27,6 +27,19 @@ def fastq2fa(fq,fa,outPrefix):
         fout.write(line2)
         line1=fin.readline()
 
+def fastq2fa_filter_len(fq,fa,outPrefix,len_min=200,len_max=5000):
+    fin=open(fq)
+    fout=open(fa,'w')
+    line1=fin.readline()
+    while line1:
+        line2=fin.readline()
+        line3=fin.readline()
+        line4=fin.readline()
+        if len(line2)>=len_min and len(line2)<=len_max:
+            fout.write('>'+line1[1:])
+            fout.write(line2)
+        line1=fin.readline()
+
 def tideHunter(fa,th,thread):
     os.system('TideHunter -f 2 -c 1.5 -p 30 -l -t %i %s>%s' % (thread,fa,th))
 
@@ -63,7 +76,7 @@ def DNSC(options):
     th=DNSC_outPrefix+'TideHunter.tab'
     
     plog('Transform fastq to fasta: fastq2fa')
-    fastq2fa(fastq,fa,DNSC_outPrefix)
+    fastq2fa_filter_len(fastq,fa,DNSC_outPrefix)
     plog('Detect consensue sequence: tideHunter')
     tideHunter(fa,th,thread)
     

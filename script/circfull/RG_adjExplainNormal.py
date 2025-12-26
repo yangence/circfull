@@ -26,7 +26,7 @@ def getNewFL(i):
     tmp=FLdf_2.iloc[idx,:].copy()
     each1=tmp.iloc[0,:].copy()
     each2=tmp.iloc[1,:].copy()
-    if abs(each1['reference_start']-each2['reference_start'])>hangLen:
+    if abs(each1['reference_start']-each2['reference_start'])>hangLen or abs(each1['reference_end']-each2['reference_end'])>hangLen:
         exon1=createIntervals(each1['exon_start'],each1['exon_end'])
         exon2=createIntervals(each2['exon_start'],each2['exon_end'])
         newExon=exon1 | exon2

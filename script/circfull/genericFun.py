@@ -4,6 +4,7 @@ import pandas as pd
 def plog(x):
     t=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     print('#### %s #### \n%s'   % (t,x))
+    sys.stdout.flush()
 
 def fileCheck(file):
     if not os.path.exists(file):

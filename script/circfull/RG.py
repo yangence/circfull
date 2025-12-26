@@ -95,7 +95,7 @@ def RG(options):
         explainFL(genome,RG_outPrefix,sam)
     
     plog('Filter and classify candidates: filterFL')
-    if not os.path.exists(RG_outPrefix+'explainFL_Normal.txt'):
+    if not (os.path.exists(RG_outPrefix+'explainFL_Normal.txt') and os.path.exists(RG_outPrefix+'explainFL_ID2Type.txt')):
         filterFL(genome,RG_outPrefix,fastq,thread)
     
     plog('Adjust normal: adjExplainNormal')

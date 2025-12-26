@@ -127,22 +127,46 @@ def intronOverlap(gene_df,targetDf,hangLen=20):
                 if (end<= each[1]+hangLen) and (end>=each[1]-hangLen):
                     overlaplist.append(each)
         return(overlaplist)
-    
+    def geneName2dict(genelist,all_possible_geneName):
+        geneName2dict=dict(zip(all_possible_geneName,range(len(all_possible_geneName))))
+        gdict = {}
+        for i, gene in enumerate(genelist): 
+            for j in gene:
+                #print(j)
+                if j not in geneName2dict:
+                    if j[-4:]=='-AS1':
+                        j=j[:-4]
+                #print(j)
+                if j not in gdict:
+                    gdict[j] = []
+                gdict[j].append(i)
+                break  # Only one gene name per loop cycle
+        return gdict
+   
     intron2isoID={}
+    all_possible_geneName=gene_df.gene2class_dict.values()
+    geneName_list=[i.split(',') for i in targetDf.geneName.map(str)]
+
+    targetDf_geneName=geneName2dict(geneName_list,all_possible_geneName)
+
     for geneID, intron_arr in gene_df.gene2intron.items():
         geneName=gene_df.gene2class_dict[geneID]
         geneStrand=gene_df.gene2strand_dict[geneID]
-        subdf=targetDf.loc[targetDf.geneName==geneName,:]
-        if subdf.shape[0]==0:
+        
+        if not targetDf_geneName.__contains__(geneName):
             continue
-        #print(subdf.shape[0])
+        subdf=targetDf.iloc[targetDf_geneName[geneName],:]
+        
+
         for i in range(subdf.shape[0]):
             each_entry=subdf.iloc[i,:]
-            each_exon_start=int(each_entry['exon_start'])
-            each_exon_end=int(each_entry['exon_end'])
+            each_exon_start=each_entry['exon_start'].strip(',').split(',')
+            each_exon_end=each_entry['exon_end'].strip(',').split(',')
             chro=each_entry['chr']
             isoID=each_entry['isoID']
-            overlap_intron=judgeOverlap(intron_arr,each_exon_start,each_exon_end,geneStrand,hangLen)
+            each_start=int(each_exon_start[0])
+            each_end=int(each_exon_end[-1])
+            overlap_intron=judgeOverlap(intron_arr,each_start,each_end,geneStrand,hangLen)
             for j in overlap_intron:
                 intron_key=chro+'|'+str(j[0])+'|'+str(j[1]) #0-based
                 if intron2isoID.__contains__(intron_key):
@@ -176,95 +200,111 @@ def readfastq(RG_df,fastq_file):
             line1=fin.readline()
     return(iso2readID,read2fq)
 
-def mp_calRead_intron(mapAll,refLen):
-    def checkInsertion(insertionArr,refLen):
+def mp_calRead_intron(mapAll, refLen):
+    def checkInsertion(insertionArr, refLen):
         for i in insertionArr:
-            if refLen+5>=i[0] and refLen-5<=i[0]:
-                return(False)
-        return(True)
-    isPass=False
-    isLariat=False
-    adjustPos=[0,0]
+            if refLen + 5 >= i[0] and refLen - 5 <= i[0]:
+                return False
+        return True
+
+    isPass = False
+    isLariat = False
+    adjustPos = [0, 0]
+
     for read in mapAll:
-        rS=read.r_st# 0-based
-        rE=read.r_en
-        qS=read.q_st
-        qE=read.q_en
-        readcigar=read.cigar
-        #print(read.cigar_str)
-        if readcigar[0][0] == 5:
-            qS+=readcigar[0][1]
-            qE+=readcigar[0][1]
-        posS=[rS]
-        posE=[]
-        currentPos=rS
-        insertPos=[]
-        delPos=[]
-        i=0
-        lastCIGAR=0
+        rS = read.r_st  # 0-based
+        rE = read.r_en
+        qS = read.q_st
+        qE = read.q_en
+        readcigar = read.cigar
+
+        # print(read.cigar_str)
+        if readcigar and readcigar[0][0] == 5:
+            qS += readcigar[0][1]
+            qE += readcigar[0][1]
+
+        posS = [rS]
+        posE = []
+        currentPos = rS
+        insertPos = []
+        delPos = []
+        i = 0
+
         for each in readcigar:
-            i=i+1
+            i += 1
+            op_len = each[0]
+            op = each[1]
+
             if i == len(readcigar):
-                if each[1] ==0:
-                    currentPos+=each[0]
-                    if len(posS)>len(posE):
+                # last CIGAR op
+                if op == 0:
+                    currentPos += op_len
+                    if len(posS) > len(posE):
                         posE.append(currentPos)
                     else:
-                        posE[-1]=currentPos
-            else:
-                if each[1] ==0:
-                    currentPos+=each[0]
-                    if len(posS)>len(posE):
-                        posE.append(currentPos)
-                    else:
-                        posE[-1]=currentPos
-                    lastCIGAR=0
-                elif each[1] ==2:
-                    currentPos+=each[0]
-                    posS.append(currentPos)
-                    lastCIGAR=2
-                    delPos.append([currentPos,each[0]])
-                elif each[1]==1:
-                    lastCIGAR=1
-                    insertPos.append([currentPos,each[0]])
-                elif each[1] == 3:
-                    posS=[]
-                    posE=[]
-                    continue
-        #print([posS,posE])
-        #print(insertPos)
-        #print(delPos)
-        matchIntron=False
-        for i in range(len(posS)):
-            each_S=posS[i]
-            each_E=posE[i]
-            if (each_S+1+5<refLen) and (each_E-5>refLen):
-                matchIntron=True
-                #isPass=True
-                if checkInsertion(insertPos,refLen):
-                    isPass=True
-                    break
+                        posE[-1] = currentPos
                 else:
-                    break
-        isLariat=False
-        adjustPos=[0,0]
+                    # MINOR FIX: if last op doesn't consume reference, still close any open block
+                    if len(posS) > len(posE):
+                        posE.append(currentPos)
+            else:
+                if op == 0:
+                    currentPos += op_len
+                    if len(posS) > len(posE):
+                        posE.append(currentPos)
+                    else:
+                        posE[-1] = currentPos
+
+                elif op == 2:
+                    currentPos += op_len
+                    posS.append(currentPos)
+                    delPos.append([currentPos, op_len])
+
+                elif op == 1:
+                    insertPos.append([currentPos, op_len])
+
+                elif op == 3:
+                    posS = []
+                    posE = []
+                    continue
+
+        # --- MINOR FIX: safely close/open segments and iterate pairs ---
+        # If we have an open segment (start without end), close it at currentPos
+        if len(posE) < len(posS):
+            posE.append(currentPos)
+
+        matchIntron = False
+        for each_S, each_E in zip(posS, posE):
+            if (each_S + 1 + 5 < refLen) and (each_E - 5 > refLen):
+                matchIntron = True
+                if checkInsertion(insertPos, refLen):
+                    isPass = True
+                break
+        # --- end MINOR FIX ---
+
+        isLariat = False
+        adjustPos = [0, 0]
+
         if not matchIntron:
             for j in range(len(delPos)):
-                delPos_site=delPos[j][0]
-                delPos_len=delPos[j][1]
-                delPos_site_lastEnd=delPos_site-delPos_len
-                if delPos_site_lastEnd==refLen:
-                    adjustPos=[delPos_len,0] #ajdust left site
-                    isLariat=True
-                    return([isPass,isLariat,adjustPos])
-                elif delPos_site==refLen:
-                    adjustPos=[0,delPos_len] #adjust right site
-                    isLariat=True
-                    return([isPass,isLariat,adjustPos])
+                delPos_site = delPos[j][0]
+                delPos_len = delPos[j][1]
+                delPos_site_lastEnd = delPos_site - delPos_len
+
+                if delPos_site_lastEnd == refLen:
+                    adjustPos = [delPos_len, 0]  # adjust left site
+                    isLariat = True
+                    return [isPass, isLariat, adjustPos]
+                elif delPos_site == refLen:
+                    adjustPos = [0, delPos_len]  # adjust right site
+                    isLariat = True
+                    return [isPass, isLariat, adjustPos]
+
         if isPass:
-            return([isPass,isLariat,[0,0]])
-            
-    return([isPass,isLariat,adjustPos])
+            return [isPass, isLariat, [0, 0]]
+
+    return [isPass, isLariat, adjustPos]
+
     
 
 def getSeq(each):
@@ -325,10 +365,10 @@ def combineJudge(readJudge):
                     if readID2type[readID][0]!='ligate':
                         tmp_read2type=ligateorlariat(intronKey,readDetail)
                         if tmp_read2type[0]=='ligate':
-                            readID2type[readID]==tmp_read2type
+                            readID2type[readID]=tmp_read2type
                         elif tmp_read2type[0]=='lariat':
                             if tmp_read2type[3]<readID2type[readID][3]:
-                                readID2type[readID]==tmp_read2type
+                                readID2type[readID]=tmp_read2type
                 else:
                     tmp_read2type=ligateorlariat(intronKey,readDetail)
                     if tmp_read2type[0]!='':
@@ -361,7 +401,7 @@ def intronFormat2RGformat(df,gene_df):
     chro=[i[0]  for i in circID_arr]
     start=[int(i[1])  for i in circID_arr]
     end=[int(i[2])  for i in circID_arr]
-    circlen=list(np.array(end)-np.array(end)+1)
+    circlen=list(np.array(end)-np.array(start)+1)
     exonNum=[1] * len(start)
     leftSeq_list=[]
     for i in range(len(start)):
@@ -426,8 +466,8 @@ def intron(options):
     gene_df.intron2gene=intron2gene
     intron_can.exon_start=intron_can.exon_start.map(str)
     intron_can.exon_end=intron_can.exon_end.map(str)
-    intron_can_pass=intron_can.loc[intron_can.exon_start.map(lambda x: len(x.split(',')))==1,:] # 1-based start; only single exon
-    #intron_can_pass=intron_can.loc[intron_can.exon_start.map(lambda x: len(x.split(',')))>0,:] # 1-based start; multiple exon
+    #intron_can_pass=intron_can.loc[intron_can.exon_start.map(lambda x: len(x.split(',')))==1,:] # 1-based start; only single exon
+    intron_can_pass=intron_can.loc[intron_can.exon_start.map(lambda x: len(x.split(',')))>0,:] # 1-based start; multiple exon
     target_intron2isoID=intronOverlap(gene_df,intron_can_pass,hangLen=20)
 
     target_iso2intron={}
@@ -473,12 +513,50 @@ def intron(options):
     RG_df_sub_pass=RG_df_sub.iloc[RG_df_sub_pass_idx,:]
     RG_df_1=RG_df.loc[~RG_df.isoID.isin(RG_df_sub_pass.isoID),:]
     RG_df_2=intronFormat2RGformat(merge_reads2type_df_format,gene_df)
+    RG_df_1=RG_df_1.loc[~RG_df_1.isoID.isin(RG_df_2.isoID),:]
     RG_df_2_detail=RG_df_2.copy()
     RG_df_2_detail.loc[:,'intronID']=merge_reads2type_df_format.loc[:,'intronID'].tolist()
     RG_df_2_detail.loc[:,'type']=merge_reads2type_df_format.loc[:,'type'].tolist()
     RG_df_2_detail.loc[:,'distance']=merge_reads2type_df_format.loc[:,'distance'].tolist()
+    
+    '''
+    def correct_multiexon_lariat(RG_df_2_detail,RG_df_sub_pass): # fix the multiexon from lariat; to do
+        RG_df_sub_pass_exon_num=RG_df_sub_pass.loc[:,'exonNum']
+        RG_df_sub_pass_more1=RG_df_sub_pass.loc[RG_df_sub_pass_exon_num>1,]
+        RG_df_sub_pass_more1_reads2iso={}
+        for i in range(RG_df_sub_pass_more1_reads2iso.shape[0]):
+            each=RG_df_sub_pass_more1_reads2iso.iloc[i,:]
+            readID=each['readID'].split(',')
+            isoID=each['isoID']
+            for j in readID:
+                RG_df_sub_pass_more1_reads2iso[j]=isoID
+        pass_intron_arr=[]
+        for i in range(RG_df_2_detail.shape[0]):
+            have_single=False
+            each=RG_df_2_detail.iloc[i,:]
+            readID=each['readID'].split(',')
+            for j in readID:
+                if j in RG_df_sub_pass_more1_reads2iso:
+                    old_isoID=RG_df_sub_pass_more1_reads2iso[j]
+                    old_iso_arr=old_isoID.split('|')
+                    old_exon_start=old_iso_arr[1].split(',')
+                    old_exon_end=old_iso_arr[2].split(',')
+                    
+                    intron_iso_arr=each['isoID'].split('|')
+                    
+                    new_iso
+                    
+                    each['read']
+                    
+                else:
+                    have_single=True
+            if have_single:
+                pass_intron_arr.append(each)
+    '''               
+                    
 
-    RG_df_3=pd.concat([RG_df_1.iloc[:,0:18],RG_df_2])
+
+    RG_df_3=pd.concat([RG_df_1.iloc[:,0:18],RG_df_2_detail.iloc[:,0:18]])
     RG_df_3.to_csv(intron_outPrefix+'circFL_Normal.txt',sep='\t',index=None)
     RG_df_2_detail.to_csv(intron_outPrefix+'circFL_intron.txt',sep='\t',index=None)
     plog('All done!!!')              
